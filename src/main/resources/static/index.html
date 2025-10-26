@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Real-Time Game</title>
+</head>
+<body>
+
+<input id="roomId" type="text"/>
+<button onclick="join(document.getElementById('roomId').value.trim())">Join</button>
+
+<input id="msg" type="text"/>
+<button onclick="sendMessage(document.getElementById('msg').value.trim())">Send message</button>
+
+<script>
+    let socket = null;
+
+    function sendMessage(msg) {
+        if(socket) {
+            socket.send(`msg:${msg}`);
+        }
+    }
+
+    function join(roomId) {
+        socket = new WebSocket("ws://localhost:8080/ws/game")
+
+        socket.onopen = () => {
+            socket.send(`join:${roomId}`);
+        }
+
+        socket.onmessage = (event) => {
+            console.log(event.data)
+        }
+    }
+</script>
+</body>
+</html>

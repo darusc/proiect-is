@@ -12,25 +12,21 @@
 <input id="msg" type="text"/>
 <button onclick="sendMessage(document.getElementById('msg').value.trim())">Send message</button>
 
+<script src="js/ws.js"></script>
 <script>
-    let socket = null;
+    const id = Math.floor(Math.random() * 100);
+    const onmessage = event => {
+        console.log(event.data);
+    }
+
+    const ws = new Ws(id, onmessage);
 
     function sendMessage(msg) {
-        if(socket) {
-            socket.send(`msg:${msg}`);
-        }
+        ws.broadcast({action: "msg", msg: msg});
     }
 
     function join(roomId) {
-        socket = new WebSocket("ws://localhost:8080/ws/game")
-
-        socket.onopen = () => {
-            socket.send(`join:${roomId}`);
-        }
-
-        socket.onmessage = (event) => {
-            console.log(event.data)
-        }
+        ws.join(roomId);
     }
 </script>
 </body>

@@ -81,19 +81,19 @@ public class CustomWebSocketHandlerImpl extends TextWebSocketHandler implements 
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         // Payload-ul trimis este in format JSON
         JsonNode node = mapper.readTree(message.getPayload());
-        String action = node.get("action").asText(null);
-
-        if (action == null) {
+        if (node.get("action") == null) {
             throw new WsException("MISSING_ACTION", "Missing action key");
         }
 
+        String action = node.get("action").asText();
+
         if (action.equals(ACTION_JOIN)) {
-            String roomId = node.get("roomId").asText(null);
-            if (roomId == null) {
+            String channelId = node.get("channelId").asText(null);
+            if (channelId == null) {
                 throw new WsException("MISSING_ROOM_ID", "Missing room id");
             }
 
-            join(session, roomId);
+            join(session, channelId);
         } else {
             // Restul actiunilor netratate de handler sunt delegate
             // catre listenerele inregistrate

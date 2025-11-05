@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Real-Time Game</title>
+</head>
+<body>
+
+<input id="roomId" type="text"/>
+<button onclick="join(document.getElementById('roomId').value.trim())">Join</button>
+
+<input id="msg" type="text"/>
+<button onclick="sendMessage(document.getElementById('msg').value.trim())">Send message</button>
+
+<script src="js/ws.js"></script>
+<script>
+    const id = Math.floor(Math.random() * 100);
+    const onmessage = event => {
+        console.log(event.data);
+    }
+
+    const ws = new Ws(id, onmessage);
+
+    function sendMessage(msg) {
+        ws.broadcast({action: "msg", msg: msg});
+    }
+
+    function join(roomId) {
+        ws.join(roomId);
+    }
+</script>
+</body>
+</html>

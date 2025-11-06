@@ -1,4 +1,4 @@
-package com.example.proiectis.Service;
+package com.example.proiectis.game;
 
 import com.example.proiectis.websocket.handler.CustomWebSocketHandler;
 import com.example.proiectis.websocket.CustomWebSocketListener;
@@ -7,15 +7,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
 
 @Service
-public class GameService implements CustomWebSocketListener {
+public class GameManager implements CustomWebSocketListener {
 
     private final CustomWebSocketHandler customWebSocketHandler;
 
-    public GameService(CustomWebSocketHandler customWebSocketHandler) {
+    public GameManager(CustomWebSocketHandler customWebSocketHandler) {
         this.customWebSocketHandler = customWebSocketHandler;
         this.customWebSocketHandler.addListener(this);
     }
-
 
     @Override
     public void onClientJoin(Client client) {

@@ -62,6 +62,9 @@ public class Board {
         if (src < 0 || src >= SIZE || dst < 0 || dst >= SIZE)
             return false;
 
+        if (board[src][0] == NONE || board[src][1] == 0)
+            return false;
+
         if (board[src][0] != board[dst][0] && board[dst][1] > 1)
             return false;
 
@@ -80,17 +83,14 @@ public class Board {
             // Daca pe locul unde mutam este o piesa de aceeasi culoare
             board[dst][1]++;
         } else {
-            if (board[src][0] != board[dst][0]) {
-                // Daca pe locul unde mutam este o piese de alta culoare
-                if (board[dst][0] == WHITE) {
-                    whitesTaken++;
-                    taken = WHITE;
-                } else {
-                    blacksTaken++;
-                    taken = BLACK;
-                }
+            // Daca pe locul unde mutam este o piese deja o piesa, aceasta e capturata
+            if (board[dst][0] == WHITE) {
+                whitesTaken++;
+            } else if(board[dst][0] == BLACK) {
+                blacksTaken++;
             }
 
+            taken = board[dst][0];
             board[dst][0] = board[src][0];
             board[dst][1] = 1;
         }
@@ -129,12 +129,53 @@ public class Board {
         nextTurn = BLACK;
     }
 
-    private void place(byte piece, int position, int count) {
+    public void place(byte piece, int position, int count) {
         board[position][0] = piece;
         board[position][1] = (byte) count;
     }
 
     private int[] rollDice() {
         return new int[]{rand.nextInt(6) + 1, rand.nextInt(6) + 1};
+    }
+
+    public void print() {
+        System.out.println("    13  14  15  16  17  18    19  20  21  22  23  24");
+        System.out.println("    ------------------------------------------------");
+
+        // TOP HALF (points 13 to 24 → board index 12 to 23)
+        for (int row = 0; row < 5; row++) {
+            System.out.print("  |");
+            for (int i = 12; i < 24; i++) {
+                System.out.print(" " + getPieceAtHeight(board[i], 4 - row) + "  ");
+                if (i == 17) System.out.print("|"); // middle bar
+            }
+            System.out.println("|");
+        }
+
+        System.out.println("    ------------------------------------------------");
+
+        // BOTTOM HALF (points 12 to 1 → board index 11 to 0)
+        for (int row = 0; row < 5; row++) {
+            System.out.print("  |");
+            for (int i = 11; i >= 0; i--) {
+                System.out.print(" " + getPieceAtHeight(board[i], row) + "  ");
+                if (i == 6) System.out.print("|"); // middle bar
+            }
+            System.out.println("|");
+        }
+
+        System.out.println("    ------------------------------------------------");
+        System.out.println("     12  11  10  9   8   7    6   5   4   3   2   1");
+    }
+
+    // Returns "W", "B", or "." depending on stack height
+    private String getPieceAtHeight(byte[] point, int row) {
+        byte count = point[1];
+        byte type = point[0];
+
+        if (count > row) {
+            return type == WHITE ? "W" : type == BLACK ? "B" : ".";
+        }
+        return ".";
     }
 }

@@ -1,5 +1,9 @@
 package com.example.proiectis.game;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
+
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Random;
@@ -8,9 +12,9 @@ public class Board {
 
     public static int SIZE = 24;
 
-    public static byte NONE = 0;
-    public static byte WHITE = 'W';
-    public static byte BLACK = 'B';
+    public static int NONE = 0;
+    public static int WHITE = 'W';
+    public static int BLACK = 'B';
 
     // Tabla de joc e reprezentata de o matrice de
     // 24 de randuri x 2 coloane => fiecare rand reprezinta
@@ -32,7 +36,7 @@ public class Board {
     // |  B   .   .   .   W   . | W   .   .   .   .   B  |
     //   ------------------------------------------------
     //    12  11  10  9   8   7   6   5   4   3   2   1
-    private final byte[][] board = new byte[SIZE][2];
+    private final int[][] board = new int[SIZE][2];
 
     private int whitesTaken;
     private int blacksTaken;
@@ -41,10 +45,14 @@ public class Board {
     private boolean whiteCanRemove;
     private boolean blackCanRemove;
 
-    private byte currentTurn;
-    private byte nextTurn;
+    @Getter
+    private int currentTurn;
+    private int nextTurn;
+
+    private int[] dice = new int[2];
 
     private final Random rand = new Random();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public Board() {
         reset();
@@ -53,13 +61,18 @@ public class Board {
     public Map<String, Serializable> serialize() {
         return Map.of(
             "turn", currentTurn,
-            "roll", rollDice(),
-            "board", board
+            "roll", dice,
+            "board", board,
+            "whitesTaken", whitesTaken,
+            "blacksTaken", blacksTaken
         );
     }
 
-    public boolean isValidMove(int src, int dst) {
+    public boolean isValidMove(int color, int src, int dst) {
         if (src < 0 || src >= SIZE || dst < 0 || dst >= SIZE)
+            return false;
+
+        if (board[src][0] != color)
             return false;
 
         if (board[src][0] == NONE || board[src][1] == 0)
@@ -76,8 +89,8 @@ public class Board {
      * o piesa este capturata se returneaza WHITE sau BLACK, altfel se returneaza NONE.
      * Se presupune ca mutarea e valida
      */
-    public byte move(int src, int dst) {
-        byte taken = NONE;
+    public int move(int src, int dst) {
+        int taken = NONE;
 
         if (board[dst][0] == board[src][0]) {
             // Daca pe locul unde mutam este o piesa de aceeasi culoare
@@ -107,7 +120,7 @@ public class Board {
      * Mergi la urmatoarea tura
      */
     public void advance() {
-        byte tmp = currentTurn;
+        int tmp = currentTurn;
         currentTurn = nextTurn;
         nextTurn = tmp;
     }
@@ -129,13 +142,14 @@ public class Board {
         nextTurn = BLACK;
     }
 
-    public void place(byte piece, int position, int count) {
+    public void place(int piece, int position, int count) {
         board[position][0] = piece;
-        board[position][1] = (byte) count;
+        board[position][1] = count;
     }
 
-    private int[] rollDice() {
-        return new int[]{rand.nextInt(6) + 1, rand.nextInt(6) + 1};
+    public int[] rollDice() {
+        this.dice = new int[]{rand.nextInt(6) + 1, rand.nextInt(6) + 1};
+        return dice;
     }
 
     public void print() {
@@ -169,9 +183,9 @@ public class Board {
     }
 
     // Returns "W", "B", or "." depending on stack height
-    private String getPieceAtHeight(byte[] point, int row) {
-        byte count = point[1];
-        byte type = point[0];
+    private String getPieceAtHeight(int[] point, int row) {
+        int count = point[1];
+        int type = point[0];
 
         if (count > row) {
             return type == WHITE ? "W" : type == BLACK ? "B" : ".";

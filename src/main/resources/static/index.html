@@ -1,33 +1,59 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Real-Time Game</title>
+    <title>Backgammon Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #111; color: #eee; }
+        #board { white-space: pre; background: black; padding: 10px; border: 1px solid #555; }
+        button { margin: 5px; padding: 8px; }
+    </style>
 </head>
 <body>
 
-<input id="roomId" type="text"/>
-<button onclick="join(document.getElementById('roomId').value.trim())">Join</button>
+Room: <input id="room" value="room1"/>
+<button onclick="connect()">Join</button>
+<button onclick="game.requestRoll()">Roll Dice</button>
 
-<input id="msg" type="text"/>
-<button onclick="sendMessage(document.getElementById('msg').value.trim())">Send message</button>
+<div id="statusContainer">
+    <div id="playerColor">Color: ?</div>
+    <div id="status">Not connected</div>
+    <div id="dice"></div>
+    <div id="remainingMoves"></div>
+    <div id="turn"></div>
+</div>
+
+<div>
+    <input id="srcCol" type="number" placeholder="From" min="1" max="24"/>
+    <input id="dstCol" type="number" placeholder="To" min="1" max="24"/>
+    <button onclick="simpleMove()">Move</button>
+</div>
+
+<pre id="board"></pre>
 
 <script src="js/ws.js"></script>
+<script src="js/game.js"></script>
+
 <script>
-    const id = Math.floor(Math.random() * 100);
-    const onmessage = event => {
-        console.log(event.data);
+    const id = Math.floor(Math.random() * 10000);
+    let game = new Game(id);
+
+    function connect() {
+        game.joinRoom(document.getElementById("room").value);
     }
 
-    const ws = new Ws(id, onmessage);
+    function simpleMove() {
+        const src = parseInt(document.getElementById("srcCol").value) - 1;
+        const dst = parseInt(document.getElementById("dstCol").value) - 1;
 
-    function sendMessage(msg) {
-        ws.broadcast({action: "msg", msg: msg});
-    }
+        if (isNaN(src) || isNaN(dst) || src < 0 || src > 23 || dst < 0 || dst > 23) {
+            console.log("Invalid columns! Must be 1-24");
+            return;
+        }
 
-    function join(roomId) {
-        ws.join(roomId);
+        game.move(src, dst);
+        //console.log(`Moved from ${src + 1} to ${dst + 1}`);
     }
 </script>
+
 </body>
 </html>

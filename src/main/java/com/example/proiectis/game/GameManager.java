@@ -58,6 +58,7 @@ public class GameManager implements CustomWebSocketListener {
     @Override
     public void onMessage(Client client, JsonNode message) {
         try {
+            System.out.println(message);
             process(client.getChannel(), message);
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -75,9 +76,14 @@ public class GameManager implements CustomWebSocketListener {
         Board board = activeGames.get(channel);
 
         switch(type) {
-            case "roll_request": roll(board, channel);
-            case "move": move(board, channel, payload.get("color").asInt(), payload.get("from").asInt(), payload.get("to").asInt());
+            case "roll_request":
+                roll(board, channel);
+                break;
+            case "move":
+                move(board, channel, payload.get("color").asInt(), payload.get("from").asInt(), payload.get("to").asInt());
+                break;
             case "advance": advance(board, channel);
+                break;
         }
     }
 

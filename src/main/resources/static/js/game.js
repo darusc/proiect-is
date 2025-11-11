@@ -13,6 +13,7 @@ class Game {
         this.boardDiv = document.getElementById("board");
         this.statusDiv = document.getElementById("status");
         this.diceDiv = document.getElementById("dice");
+        this.turnDiv = document.getElementById("turn");
     }
 
     joinRoom(room) {
@@ -29,8 +30,6 @@ class Game {
             case "game_start":
                 this.color = data['payload']['white'] === this.playerId ? 87 : 66;
                 document.getElementById("playerColor").innerHTML = `Color: ${this.color === 87 ? 'White' : 'Black'}`;
-                let turnText = this.myTurn ? "<b>Your turn!</b>" : "Opponent turn";
-                this.setStatus(`Game started! ${turnText}`);
                 break;
 
             case "roll_result":
@@ -39,15 +38,13 @@ class Game {
                     ? [this.dice[0], this.dice[0], this.dice[0], this.dice[0]]
                     : [this.dice[0], this.dice[1]];
 
-                const turnText2 = this.myTurn ? "<b>Your turn!</b>" : "Opponent turn";
-                this.setStatus(`${turnText2} | Rolled: ${this.dice.join(", ")}`);
-                this.renderDice();
+                this.diceDiv.innerText = (this.dice.join("  "));
                 break;
 
             case "state":
                 const turn = data['payload']['turn'];
                 this.myTurn = turn === this.color;
-                this.setStatus(this.myTurn ? "Your turn!" : "Opponent turn");
+                this.turnDiv.innerText = this.myTurn ? "Your turn!" : "Opponent turn";
 
                 this.board = data['payload']['board'];
                 const normalized = this.normalizeBoard(this.board);
@@ -62,7 +59,7 @@ class Game {
 
     requestRoll() {
         if (!this.myTurn) {
-            this.setStatus("Wait your turn!");
+            console.log("Wait your turn!");
             return;
         }
         this.ws.broadcast({ action: "GAME", type: "roll_request", payload: {} });
@@ -70,23 +67,24 @@ class Game {
 
     move(from, to) {
         if (!this.myTurn) {
-            this.setStatus("Not your turn!");
+            console.log("Not your turn!");
             return;
         }
+
         if (!this.remainingMoves.length) {
-            this.setStatus("No moves left! Roll first.");
+            console.log("No moves left! Roll first.");
             return;
         }
 
         const steps = Math.abs(to - from);
         const direction = this.color === 87 ? 1 : -1;
         if ((to - from) * direction >= 0) {
-            this.setStatus("Invalid direction!");
+            console.log("Invalid direction!");
             return;
         }
 
         if (!this.remainingMoves.includes(steps)) {
-            this.setStatus(`Invalid move! You can only move: ${this.remainingMoves.join(", ")}`);
+            console.log(`Invalid move! You can only move: ${this.remainingMoves.join(", ")}`);
             return;
         }
 
@@ -94,16 +92,16 @@ class Game {
 
         const idx = this.remainingMoves.indexOf(steps);
         this.remainingMoves.splice(idx, 1);
+        console.log(this.remainingMoves);
 
         // Păstrăm turul și culoarea
-        const turnText = this.myTurn ? "<b>Your turn!</b>" : "Opponent turn";
-        this.setStatus(`${turnText} Moved from ${from + 1} to ${to + 1} | Color: ${this.color === 87 ? 'White' : 'Black'}`);
+        console.log(`Moved from ${from + 1} to ${to + 1} | Color: ${this.color === 87 ? 'White' : 'Black'}`);
         this.renderRemainingMoves();
 
         if (!this.remainingMoves.length) {
             setTimeout(() => {
                 this.ws.broadcast({ action: "GAME", type: "advance", payload: {} });
-                this.setStatus(`Turn ended. Waiting for opponent... | Color: ${this.color === 87 ? 'White' : 'Black'}`);
+                console.log(`Turn ended. Waiting for opponent... | Color: ${this.color === 87 ? 'White' : 'Black'}`);
                 this.renderRemainingMoves();
             }, 200);
         }
@@ -111,21 +109,11 @@ class Game {
 
     renderRemainingMoves() {
         const remEl = document.getElementById("remainingMoves");
-        if (!this.remainingMoves.length) {
-            remEl.innerHTML = "No moves left";
-            return;
-        }
-        // afișăm fiecare zar rămas ca emoji
-        remEl.innerHTML = "Moves left: " + this.remainingMoves.map(d => `<span style="color: yellow; font-weight: bold;">${this.remainingMoves[d-1]}</span>`).join("  ");
+        remEl.innerHTML = "Moves left: " + this.remainingMoves.map((d) => `<span style="color: yellow; font-weight: bold;">${d}</span>`).join("  ");
     }
-
-
+    
     setStatus(text) {
         this.statusDiv.innerText = text;
-    }
-
-    renderDice() {
-        this.diceDiv.innerText = "🎲 " + (this.dice.join("  "));
     }
 
     renderBoard(board) {

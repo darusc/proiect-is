@@ -19,11 +19,12 @@ Room: <input id="room" value="room1"/>
     <div id="status">Not connected</div>
     <div id="dice"></div>
     <div id="remainingMoves"></div>
+    <div id="turn"></div>
 </div>
 
 <div>
-    <input id="srcCol" type="number" placeholder="From (1-24)" min="1" max="24"/>
-    <input id="dstCol" type="number" placeholder="To (1-24)" min="1" max="24"/>
+    <input id="srcCol" type="number" placeholder="From" min="1" max="24"/>
+    <input id="dstCol" type="number" placeholder="To" min="1" max="24"/>
     <button onclick="simpleMove()">Move</button>
 </div>
 
@@ -50,7 +51,7 @@ Room: <input id="room" value="room1"/>
         }
 
         game.move(src, dst);
-        console.log(`Moved from ${src + 1} to ${dst + 1}`);
+        //console.log(`Moved from ${src + 1} to ${dst + 1}`);
     }
 </script>
 

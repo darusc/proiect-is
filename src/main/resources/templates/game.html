@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabla de Table</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #232323;
+        }
+
+        .board {
+            background-color: #344d33;
+            aspect-ratio: 1 / 1;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            border: 4px solid black;
+            border-radius: 1rem;
+            padding: 0.5rem;
+            gap: 2px;
+        }
+
+        .row {
+            display: flex;
+            flex: 1;
+            gap: 2px;
+        }
+
+        .bar {
+            width: 8%;
+            height: 100%;
+            background-color: #275a2c;
+        }
+
+        .side {
+            display: flex;
+            flex: 1;
+            gap: 2px;
+        }
+
+        .triangle {
+            flex: 1;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+        }
+
+        /* alternating triangle colors using nth-child */
+        .triangle:nth-of-type(2n) {
+            background-image: url("data:image/svg+xml,%3Csvg fill='%23111' opacity='.3' viewBox='0 0 2 1' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'%3E%3Cpolygon points='0,0 1,1 2,0'/%3E%3C/svg%3E");
+        }
+
+        .triangle:nth-of-type(2n-1) {
+            background-image: url("data:image/svg+xml,%3Csvg fill='%23777' opacity='.3' viewBox='0 0 2 1' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'%3E%3Cpolygon points='0,0 1,1 2,0'/%3E%3C/svg%3E");
+        }
+
+        .triangle.down {
+            transform: rotate(180deg);
+        }
+
+        .piece {
+            display: block;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            margin: 2px auto;
+            z-index: 10;
+        }
+
+        .piece.b {
+            background: radial-gradient(#333, #000);
+            border: 1px solid #666;
+        }
+
+        .piece.w {
+            background: radial-gradient(#8f8e8e, #474747);
+            border: 1px solid #aaa;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .spacer {
+            height: 10vh;
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col items-center p-6">
+
+<div class="board">
+    <div class="row">
+        <div class="side">
+            <div class="triangle" data-point="13"></div>
+            <div class="triangle" data-point="14"></div>
+            <div class="triangle" data-point="15"></div>
+            <div class="triangle" data-point="16"></div>
+            <div class="triangle" data-point="17"></div>
+            <div class="triangle" data-point="18"></div>
+        </div>
+
+        <div class="bar"></div>
+
+        <div class="side">
+            <div class="triangle" data-point="19"></div>
+            <div class="triangle" data-point="20"></div>
+            <div class="triangle" data-point="21"></div>
+            <div class="triangle" data-point="22"></div>
+            <div class="triangle" data-point="23"></div>
+            <div class="triangle" data-point="24"></div>
+        </div>
+    </div>
+
+    <div class="spacer">
+        <div class="bar"></div>
+    </div>
+
+    <div class="row">
+        <div class="side">
+            <div class="triangle down" data-point="12"></div>
+            <div class="triangle down" data-point="11"></div>
+            <div class="triangle down" data-point="10"></div>
+            <div class="triangle down" data-point="9"></div>
+            <div class="triangle down" data-point="8"></div>
+            <div class="triangle down" data-point="7"></div>
+        </div>
+
+        <div class="bar"></div>
+
+        <div class="side">
+            <div class="triangle down" data-point="6"></div>
+            <div class="triangle down" data-point="5"></div>
+            <div class="triangle down" data-point="4"></div>
+            <div class="triangle down" data-point="3"></div>
+            <div class="triangle down" data-point="2"></div>
+            <div class="triangle down" data-point="1"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    class Board {
+
+        constructor() {
+            this.triangles = document.querySelectorAll('.triangle');
+        }
+
+        render(board) {
+            for(let i = 0; i < board.length; i++) {
+                const row = board[i];
+                const piece = row[0];
+                const count = row[1];
+
+                const triangle = Array.from(this.triangles).find(t => t.dataset.point == (i+1).toString());
+
+                for (let i = 0; i < count; i++) {
+                    const pieceElement = document.createElement('span');
+                    pieceElement.classList.add('piece', piece);
+                    pieceElement.classList.add(piece === 87 ? 'w' : 'b');
+                    triangle.appendChild(pieceElement);
+                }
+            }
+        }
+    }
+
+    const board = new Board();
+    board.render([[67,2],[0,0],[0,0],[0,0],[0,0],[87,5],[0,0],[87,3],[0,0],[0,0],[0,0],[67,5],[87,5],[0,0],[0,0],[0,0],[67,3],[0,0],[67,5],[0,0],[0,0],[0,0],[0,0],[87,2]]);
+
+</script>
+
+</body>
+
+</html>

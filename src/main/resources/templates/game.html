@@ -90,7 +90,7 @@
         }
 
         .spacer {
-            height: 10vh;
+            height: 12vh;
             display: flex;
             justify-content: center;
         }
@@ -150,34 +150,30 @@
 </div>
 
 <script>
+    const triangles = document.querySelectorAll('.triangle');
 
-    class Board {
+    const playerId = Math.floor(Math.random() * 1000);
 
-        constructor() {
-            this.triangles = document.querySelectorAll('.triangle');
-        }
+    const game = new Game(playerId, state => {
+        renderBoard(state['board']);
+    });
 
-        render(board) {
-            for(let i = 0; i < board.length; i++) {
-                const row = board[i];
-                const piece = row[0];
-                const count = row[1];
+    function renderBoard(board) {
+        for(let i = 0; i < board.length; i++) {
+            const row = board[i];
+            const piece = row[0];
+            const count = row[1];
 
-                const triangle = Array.from(this.triangles).find(t => t.dataset.point == (i+1).toString());
+            const triangle = Array.from(this.triangles).find(t => t.dataset.point == (i+1).toString());
 
-                for (let i = 0; i < count; i++) {
-                    const pieceElement = document.createElement('span');
-                    pieceElement.classList.add('piece', piece);
-                    pieceElement.classList.add(piece === 87 ? 'w' : 'b');
-                    triangle.appendChild(pieceElement);
-                }
+            for (let i = 0; i < count; i++) {
+                const pieceElement = document.createElement('span');
+                pieceElement.classList.add('piece', piece);
+                pieceElement.classList.add(piece === 87 ? 'w' : 'b');
+                triangle.appendChild(pieceElement);
             }
         }
     }
-
-    const board = new Board();
-    board.render([[67,2],[0,0],[0,0],[0,0],[0,0],[87,5],[0,0],[87,3],[0,0],[0,0],[0,0],[67,5],[87,5],[0,0],[0,0],[0,0],[67,3],[0,0],[67,5],[0,0],[0,0],[0,0],[0,0],[87,2]]);
-
 </script>
 
 </body>

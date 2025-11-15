@@ -1,4 +1,4 @@
-package com.example.proiectis.Entity;
+package com.example.proiectis.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,6 +9,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter
+@Setter
 public class Player {
 
     @Id

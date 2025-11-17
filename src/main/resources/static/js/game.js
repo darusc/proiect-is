@@ -2,29 +2,20 @@ class Game {
 
     /**
      * @param {...number} playerId
-     * @param {...function} render
+     * @param {...string} roomId
+     * @param {...{board: Function, dice: Function}} renderer
      */
-    constructor(playerId, render) {
+    constructor(playerId, roomId, renderer) {
         this.playerId = playerId;
-        this.ws = new Ws(playerId, msg => this.onMessage(msg));
+        this.ws = new Ws(playerId, roomId, msg => this.onMessage(msg));
         this.board = null;
         this.myTurn = false;
         this.dice = [];
         this.color = null;
         this.remainingMoves = [];
+        this.renderer = renderer;
 
-        this.render = () => {
-            render({
-                'board': this.board,
-                'dice': this.dice,
-                'remainingMoves': this.remainingMoves
-            })
-        }
-    }
-
-    joinRoom(room) {
-        this.ws.join(room);
-        console.log("Joining room " + room + "...");
+        console.log(this.renderer);
     }
 
     onMessage(event) {
@@ -43,6 +34,7 @@ class Game {
                     ? [this.dice[0], this.dice[0], this.dice[0], this.dice[0]]
                     : [this.dice[0], this.dice[1]];
 
+                this.renderer['dice'](this.dice);
                 break;
 
             case "state":
@@ -50,6 +42,8 @@ class Game {
                 this.myTurn = turn === this.color;
 
                 this.board = data['payload']['board'];
+                this.renderer['board'](this.board);
+                this.renderer['dice'](data['payload']['roll']);
                 break;
 
             case "ERROR":

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tabla de Table</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <style>
         body {
             background-color: #232323;
@@ -45,6 +46,8 @@
             flex: 1;
             background-repeat: no-repeat;
             background-size: 100% 100%;
+            border-bottom-left-radius: 1em;
+            border-bottom-right-radius: 1em;
         }
 
         /* alternating triangle colors using nth-child */
@@ -94,83 +97,312 @@
             display: flex;
             justify-content: center;
         }
+
+        .roll {
+            background-color: #366810;
+            box-shadow: 0 0 .1em 0 #000, inset 0 0 .1em 0 rgba(255, 255, 255, .4);
+            border-radius: .5em;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            display: block;
+            color: #bbb;
+        }
+
+        .bar.center {
+            display: flex;
+            flex-direction: column;
+            padding: 0 .3em;
+            justify-content: space-between;
+        }
+
+        .roll:hover {
+            background-color: #4d9545;
+        }
+
+        .dice-container {
+            background-color: white;
+            border-radius: .3em;
+        }
+
+        .grayed {
+            background-color: gray;
+        }
+
+        .dice {
+            display: none;
+        }
+
+        .dice.visible {
+            display: block;
+        }
+
+        .triangle.highlight {
+            background-color: rgba(68, 189, 50, .3);
+        }
     </style>
 </head>
 
 <body class="flex flex-col items-center p-6">
 
-<div class="board">
-    <div class="row">
-        <div class="side">
-            <div class="triangle" data-point="13"></div>
-            <div class="triangle" data-point="14"></div>
-            <div class="triangle" data-point="15"></div>
-            <div class="triangle" data-point="16"></div>
-            <div class="triangle" data-point="17"></div>
-            <div class="triangle" data-point="18"></div>
+    <div class="board">
+        <div class="row">
+            <div class="side">
+                <div class="triangle" data-point="13"></div>
+                <div class="triangle" data-point="14"></div>
+                <div class="triangle" data-point="15"></div>
+                <div class="triangle" data-point="16"></div>
+                <div class="triangle" data-point="17"></div>
+                <div class="triangle" data-point="18"></div>
+            </div>
+
+            <div class="bar"></div>
+
+            <div class="side">
+                <div class="triangle" data-point="19"></div>
+                <div class="triangle" data-point="20"></div>
+                <div class="triangle" data-point="21"></div>
+                <div class="triangle" data-point="22"></div>
+                <div class="triangle" data-point="23"></div>
+                <div class="triangle" data-point="24"></div>
+            </div>
         </div>
 
-        <div class="bar"></div>
+        <div class="spacer">
+            <div class="bar center">
+                <button class="roll">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                </button>
 
-        <div class="side">
-            <div class="triangle" data-point="19"></div>
-            <div class="triangle" data-point="20"></div>
-            <div class="triangle" data-point="21"></div>
-            <div class="triangle" data-point="22"></div>
-            <div class="triangle" data-point="23"></div>
-            <div class="triangle" data-point="24"></div>
+
+                <div class="dice-container">
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-0">
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-1">
+                        <circle r="4" cx="9" cy="9"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-2">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-3">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="9" cy="9"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-4">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="14"></circle>
+                        <circle r="2" cx="14" cy="4"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-5">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="14"></circle>
+                        <circle r="2" cx="9" cy="9"></circle>
+                        <circle r="2" cx="14" cy="4"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-6">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="14"></circle>
+                        <circle r="2" cx="14" cy="9"></circle>
+                        <circle r="2" cx="4" cy="9"></circle>
+                        <circle r="2" cx="14" cy="4"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                </div>
+                <div class="dice-container">
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-0"></svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-1">
+                        <circle r="4" cx="9" cy="9"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-2">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-3">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="9" cy="9"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-4">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="14"></circle>
+                        <circle r="2" cx="14" cy="4"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-5">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="14"></circle>
+                        <circle r="2" cx="9" cy="9"></circle>
+                        <circle r="2" cx="14" cy="4"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                        focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-6">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="14"></circle>
+                        <circle r="2" cx="14" cy="9"></circle>
+                        <circle r="2" cx="4" cy="9"></circle>
+                        <circle r="2" cx="14" cy="4"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="side">
+                <div class="triangle down" data-point="12"></div>
+                <div class="triangle down" data-point="11"></div>
+                <div class="triangle down" data-point="10"></div>
+                <div class="triangle down" data-point="9"></div>
+                <div class="triangle down" data-point="8"></div>
+                <div class="triangle down" data-point="7"></div>
+            </div>
+
+            <div class="bar"></div>
+
+            <div class="side">
+                <div class="triangle down" data-point="6"></div>
+                <div class="triangle down" data-point="5"></div>
+                <div class="triangle down" data-point="4"></div>
+                <div class="triangle down" data-point="3"></div>
+                <div class="triangle down" data-point="2"></div>
+                <div class="triangle down" data-point="1"></div>
+            </div>
         </div>
     </div>
 
-    <div class="spacer">
-        <div class="bar"></div>
-    </div>
-
-    <div class="row">
-        <div class="side">
-            <div class="triangle down" data-point="12"></div>
-            <div class="triangle down" data-point="11"></div>
-            <div class="triangle down" data-point="10"></div>
-            <div class="triangle down" data-point="9"></div>
-            <div class="triangle down" data-point="8"></div>
-            <div class="triangle down" data-point="7"></div>
-        </div>
-
-        <div class="bar"></div>
-
-        <div class="side">
-            <div class="triangle down" data-point="6"></div>
-            <div class="triangle down" data-point="5"></div>
-            <div class="triangle down" data-point="4"></div>
-            <div class="triangle down" data-point="3"></div>
-            <div class="triangle down" data-point="2"></div>
-            <div class="triangle down" data-point="1"></div>
-        </div>
-    </div>
-</div>
-
+<script src="/js/ws.js"></script>
+<script src="/js/game.js"></script>
+<script th:inline="javascript">
+    const playerId = /*[[${playerId}]]*/ 0;
+    const roomId = /*[[${roomId}]]*/ "";
+</script>
 <script>
+    let selectedTriangle = null;
     const triangles = document.querySelectorAll('.triangle');
-
-    const playerId = Math.floor(Math.random() * 1000);
-
-    const game = new Game(playerId, state => {
-        renderBoard(state['board']);
+    triangles.forEach(t => {
+        t.addEventListener("click", () => onTriangleClick(t));
     });
 
+    const game = new Game(playerId, roomId, {
+        board: renderBoard,
+        dice: renderDice
+    });
+
+    document.querySelector('.roll').addEventListener('click', () => {
+        game.requestRoll();
+    });
+
+    function onTriangleClick(triangle) {
+        if(selectedTriangle === null) {
+            highlightPossibleMoves(triangle);
+            selectedTriangle = triangle;
+        } else if(triangle.classList.contains("highlight")) {
+            const from = parseInt(selectedTriangle.dataset['point']);
+            const to = parseInt(triangle.dataset['point']);
+
+            game.move(from - 1, to - 1);
+
+            clearHighlight();
+            selectedTriangle = null;
+        }
+    }
+
+    function highlightPossibleMoves(triangle) {
+        const from = parseInt(triangle.dataset['point']);
+
+        clearHighlight();
+        game.remainingMoves.forEach(offset => {
+
+            const to = from + offset * (game.color === 87 ? -1 : 1);
+            if(to < 1 || to > 24) {
+                return;
+            }
+
+            const destTriangle = document.querySelector(`.triangle[data-point="${to}"]`);
+            if(!destTriangle) {
+                return;
+            }
+
+            const pieces = destTriangle.querySelectorAll('.piece');
+
+            if(pieces.length === 0) {
+                destTriangle.classList.add('highlight');
+            } else {
+                const color = pieces[0].classList.contains('w') ? 87 : 67;
+                if(color === game.color || pieces.length === 1) {
+                    destTriangle.classList.add('highlight');
+                }
+            }
+        });
+    }
+
+    function clearHighlight() {
+        triangles.forEach(t => t.classList.remove('highlight'));
+    }
+
     function renderBoard(board) {
-        for(let i = 0; i < board.length; i++) {
+        triangles.forEach(t => t.innerHTML = "");
+        for (let i = 0; i < board.length; i++) {
             const row = board[i];
             const piece = row[0];
             const count = row[1];
 
-            const triangle = Array.from(this.triangles).find(t => t.dataset.point == (i+1).toString());
+            const triangle = Array.from(triangles).find(t => t.dataset.point == (i + 1).toString());
 
             for (let i = 0; i < count; i++) {
                 const pieceElement = document.createElement('span');
                 pieceElement.classList.add('piece', piece);
                 pieceElement.classList.add(piece === 87 ? 'w' : 'b');
                 triangle.appendChild(pieceElement);
+            }
+        }
+    }
+
+    function renderDice(dice) {
+        document.querySelectorAll('.dice').forEach(e => {
+            e.classList.remove('visible');
+        });
+
+        const rollButton = document.querySelector('.roll');
+        const containers = document.querySelectorAll('.dice-container');
+
+        if(dice[0] === 0 && dice[1] === 0) {
+            rollButton.style.display = 'block';
+            if(!game.myTurn) {
+                rollButton.classList.add('grayed');
+                rollButton.disabled = true;
+            } else {
+                rollButton.classList.remove('grayed');
+                rollButton.disabled = false;
+            }
+        } else {
+            rollButton.style.display = 'none';
+
+            containers[0].querySelector(`.dice-${dice[0]}`).classList.add('visible');
+            containers[1].querySelector(`.dice-${dice[1]}`).classList.add('visible');
+
+            if(!game.myTurn) {
+                containers.forEach(c => c.classList.add('grayed'));
+            } else {
+                containers.forEach(c => c.classList.remove('grayed'));
             }
         }
     }

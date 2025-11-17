@@ -123,6 +123,8 @@ public class Board {
         int tmp = currentTurn;
         currentTurn = nextTurn;
         nextTurn = tmp;
+        dice[0] = 0;
+        dice[1] = 0;
     }
 
     public void reset() {

@@ -14,8 +14,6 @@ class Game {
         this.color = null;
         this.remainingMoves = [];
         this.renderer = renderer;
-
-        console.log(this.renderer);
     }
 
     onMessage(event) {
@@ -44,6 +42,7 @@ class Game {
                 this.board = data['payload']['board'];
                 this.renderer['board'](this.board);
                 this.renderer['dice'](data['payload']['roll']);
+                this.renderer['capturedPieces'](data['payload']['whitesTaken'], data['payload']['blacksTaken'])
                 break;
 
             case "ERROR":

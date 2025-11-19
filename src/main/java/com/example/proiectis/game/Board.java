@@ -38,7 +38,9 @@ public class Board {
     //    12  11  10  9   8   7   6   5   4   3   2   1
     private final int[][] board = new int[SIZE][2];
 
+    @Getter
     private int whitesTaken;
+    @Getter
     private int blacksTaken;
 
     // Daca toate piesele sunt in casa
@@ -81,6 +83,38 @@ public class Board {
         if (board[src][0] != board[dst][0] && board[dst][1] > 1)
             return false;
 
+        if(color == BLACK && blacksTaken > 0 || color == WHITE && whitesTaken > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean isValidReenter(int color, int position) {
+        if(color == Board.BLACK && blacksTaken == 0) {
+            return false;
+        }
+
+        if(color == Board.WHITE && whitesTaken == 0) {
+            return false;
+        }
+
+        if (color == BLACK && (position > 5 || position < 0)) {
+            return false;
+        }
+
+        if(color == WHITE && (position > SIZE || position < 18)) {
+            return false;
+        }
+
+        if(color == WHITE && board[position][0] == BLACK && board[position][1] > 1) {
+            return false;
+        }
+
+        if(color == BLACK && board[position][0] == WHITE && board[position][1] > 1) {
+            return false;
+        }
+
         return true;
     }
 
@@ -111,6 +145,38 @@ public class Board {
         board[src][1]--;
         if(board[src][0] == 0) {
             board[src][1] = NONE;
+        }
+
+        return taken;
+    }
+
+    /**
+     * Repune o piesa capturata inapoi in joc
+     */
+    public int reenter(int color, int position) {
+        int taken = NONE;
+
+        if(board[position][0] == NONE) {
+            board[position][0] = color;
+            board[position][1] = 1;
+        } else if(board[position][0] == color) {
+            board[position][1]++;
+        } else {
+            if(board[position][0] == BLACK) {
+                blacksTaken++;
+            } else {
+                whitesTaken++;
+            }
+
+            taken =  board[position][0];
+            board[position][0] = color;
+            board[position][1] = 1;
+        }
+
+        if (color == WHITE) {
+            whitesTaken--;
+        } else {
+            blacksTaken--;
         }
 
         return taken;

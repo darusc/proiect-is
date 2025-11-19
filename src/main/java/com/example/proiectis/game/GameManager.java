@@ -82,7 +82,11 @@ public class GameManager implements CustomWebSocketListener {
             case "move":
                 move(board, channel, payload.get("color").asInt(), payload.get("from").asInt(), payload.get("to").asInt());
                 break;
-            case "advance": advance(board, channel);
+            case "advance":
+                advance(board, channel);
+                break;
+            case "reenter":
+                reenter(board, channel, payload.get("color").asInt(), payload.get("position").asInt());
                 break;
         }
     }
@@ -90,6 +94,16 @@ public class GameManager implements CustomWebSocketListener {
     private void roll(Board board, Channel channel) throws Exception {
         int[] dice = board.rollDice();
         customWebSocketHandler.broadcast(channel, Message.rollResult(board.getCurrentTurn(), dice));
+    }
+
+    private void reenter(Board board, Channel channel, int color, int position) throws Exception {
+        if(!board.isValidReenter(color, position)) {
+            customWebSocketHandler.broadcast(channel, Message.invalidReenter("Invalid reenter"));
+            return;
+        }
+
+        board.reenter(color, position);
+        customWebSocketHandler.broadcast(channel, Message.state(board.serialize()));
     }
 
     private void move(Board board, Channel channel, int color, int src, int dst) throws Exception {
@@ -104,7 +118,6 @@ public class GameManager implements CustomWebSocketListener {
         }
 
         board.move(src, dst);
-
         customWebSocketHandler.broadcast(channel, Message.state(board.serialize()));
     }
 

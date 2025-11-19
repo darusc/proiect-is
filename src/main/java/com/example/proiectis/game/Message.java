@@ -34,6 +34,15 @@ public class Message {
         );
     }
 
+    public static Object invalidReenter(String reason) {
+        return Map.of(
+                "type", "invalid_reenter",
+                "payload", Map.of(
+                        "reason", reason
+                )
+        );
+    }
+
     public static Object state(Object boardState) {
         return Map.of(
                 "type", "state",

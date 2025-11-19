@@ -341,15 +341,43 @@
     const game = new Game(playerId, roomId, {
         board: renderBoard,
         dice: renderDice,
-        capturedPieces: renderCapturedPieces
+        capturedPieces: renderCapturedPieces,
+        highlightReentry: highlightReentry
     });
 
     document.querySelector('.roll').addEventListener('click', () => {
         game.requestRoll();
     });
 
+    /**
+     * @param {...Element} triangle
+     */
     function onTriangleClick(triangle) {
-        if(selectedTriangle === null) {
+        const point = parseInt(triangle.dataset['point']);
+
+        const taken = (game.color === 87) ? game.whitesTaken : game.blacksTaken;
+
+        if (taken > 0 && triangle.classList.contains('highlight') && triangle.classList.contains('reentry')) {
+            game.reenter(point - 1);
+            clearHighlight();
+            selectedTriangle = null;
+            return;
+        }
+
+        if(selectedTriangle === null || !triangle.classList.contains("highlight")) {
+            const pieces = triangle.querySelectorAll('.piece');
+            if(pieces.length === 0) {
+                return;
+            }
+
+            if(pieces[0].classList.contains('w') && game.color === 66) {
+                return;
+            }
+
+            if(pieces[0].classList.contains('b') && game.color === 87) {
+                return;
+            }
+
             highlightPossibleMoves(triangle);
             selectedTriangle = triangle;
         } else if(triangle.classList.contains("highlight")) {
@@ -384,7 +412,7 @@
             if(pieces.length === 0) {
                 destTriangle.classList.add('highlight');
             } else {
-                const color = pieces[0].classList.contains('w') ? 87 : 67;
+                const color = pieces[0].classList.contains('w') ? 87 : 66;
                 if(color === game.color || pieces.length === 1) {
                     destTriangle.classList.add('highlight');
                 }
@@ -392,8 +420,34 @@
         });
     }
 
+    function highlightReentry() {
+        clearHighlight();
+        game.remainingMoves.forEach(offset => {
+            let dest = game.color === 87 ? 24 - offset + 1 : offset;
+            if(dest < 1 || dest > 24) {
+                return;
+            }
+
+            const destTriangle = document.querySelector(`.triangle[data-point="${dest}"]`);
+            if(!destTriangle) {
+                return;
+            }
+
+            const pieces = destTriangle.querySelectorAll('.piece');
+
+            if(pieces.length === 0) {
+                destTriangle.classList.add('highlight', 'reentry');
+            } else {
+                const color = pieces[0].classList.contains('w') ? 87 : 66;
+                if(color === game.color || pieces.length === 1) {
+                    destTriangle.classList.add('highlight', 'reentry');
+                }
+            }
+        });
+    }
+
     function clearHighlight() {
-        triangles.forEach(t => t.classList.remove('highlight'));
+        triangles.forEach(t => t.classList.remove('highlight', 'reentry'));
     }
 
     function renderBoard(board) {

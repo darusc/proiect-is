@@ -14,6 +14,8 @@ class Game {
         this.color = null;
         this.remainingMoves = [];
         this.renderer = renderer;
+        this.whitesTaken = 0;
+        this.blacksTaken = 0;
     }
 
     onMessage(event) {
@@ -33,16 +35,24 @@ class Game {
                     : [this.dice[0], this.dice[1]];
 
                 this.renderer['dice'](this.dice);
+
+                if(this.color === 87 && this.whitesTaken > 0 || this.color === 66 && this.blacksTaken > 0) {
+                    this.renderer['highlightReentry']();
+                }
+
                 break;
 
             case "state":
                 const turn = data['payload']['turn'];
                 this.myTurn = turn === this.color;
+                this.whitesTaken = data['payload']['whitesTaken'];
+                this.blacksTaken = data['payload']['blacksTaken'];
 
                 this.board = data['payload']['board'];
+
                 this.renderer['board'](this.board);
                 this.renderer['dice'](data['payload']['roll']);
-                this.renderer['capturedPieces'](data['payload']['whitesTaken'], data['payload']['blacksTaken'])
+                this.renderer['capturedPieces'](this.whitesTaken, this.blacksTaken)
                 break;
 
             case "ERROR":
@@ -57,6 +67,47 @@ class Game {
             return;
         }
         this.ws.broadcast({ action: "GAME", type: "roll_request", payload: {} });
+    }
+
+    reenter(position) {
+        if (!this.myTurn) {
+            console.log("Not your turn!");
+            return;
+        }
+
+        if (!this.remainingMoves.length) {
+            console.log("No moves left! Roll first.");
+            return;
+        }
+
+        const taken = (this.color === 87)
+            ? this.board.whitesTaken
+            : this.board.blacksTaken;
+
+        // If no captured checkers → can't reenter
+        if (taken <= 0) return;
+
+        const requiredMove = this.color === 87 ? 24 - position : position;
+        if(!this.remainingMoves.includes(requiredMove)) {
+            console.log(`Invalid move! You can only move: ${this.remainingMoves.join(", ")}`);
+            return;
+        }
+
+        const idx = this.remainingMoves.indexOf(requiredMove);
+        this.remainingMoves.splice(idx, 1);
+        console.log(this.remainingMoves);
+
+        // Only send request; server validates everything
+        this.ws.broadcast({
+            action: "GAME",
+            type: "reenter",
+            payload: {
+                color: this.color,
+                position
+            }
+        });
+
+        console.log("Requested reentry on", position);
     }
 
     move(from, to) {

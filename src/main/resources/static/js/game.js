@@ -87,7 +87,7 @@ class Game {
         // If no captured checkers → can't reenter
         if (taken <= 0) return;
 
-        const requiredMove = this.color === 87 ? 24 - position : position;
+        const requiredMove = this.color === 87 ? 24 - position : position + 1;
         if(!this.remainingMoves.includes(requiredMove)) {
             console.log(`Invalid move! You can only move: ${this.remainingMoves.join(", ")}`);
             return;

@@ -24,6 +24,10 @@
             gap: 2px;
         }
 
+        .board.flip {
+            transform: rotate(180deg);
+        }
+
         .row {
             display: flex;
             flex: 1;
@@ -465,6 +469,10 @@
                 pieceElement.classList.add(piece === 87 ? 'w' : 'b');
                 triangle.appendChild(pieceElement);
             }
+        }
+
+        if(game.color === 66) {
+            document.querySelector('.board').classList.add('flip');
         }
     }
 

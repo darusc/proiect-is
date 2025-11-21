@@ -143,8 +143,8 @@ public class Board {
         }
 
         board[src][1]--;
-        if(board[src][0] == 0) {
-            board[src][1] = NONE;
+        if(board[src][1] == 0) {
+            board[src][0] = NONE;
         }
 
         return taken;

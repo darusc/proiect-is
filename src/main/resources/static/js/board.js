@@ -206,9 +206,7 @@ class Board {
                 dice1.classList.add('double');
                 dice2.classList.add('double');
             } else if (remaining === 3) {
-                dice1.classList.remove('double');
-            } else if (remaining === 2) {
-                dice2.classList.remove('double');
+                dice2.classList.add('double');
             } else if (remaining === 1) {
                 dice1.classList.add('grayed');
             }

@@ -131,6 +131,7 @@ body {
 .dice {
     display: none;
     border-radius: 0.5em;
+    background-color: white;
 }
 
 .dice.visible {
@@ -139,6 +140,10 @@ body {
 
 .dice.double {
     background-color: yellowgreen;
+}
+
+.dice.grayed {
+    background-color: gray;
 }
 
 .triangle.highlight {

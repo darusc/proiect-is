@@ -192,7 +192,8 @@ public class Board {
 
     public int[] rollDice() {
         // Genereaza zarul random
-        this.dice = new int[]{rand.nextInt(6) + 1, rand.nextInt(6) + 1};
+        this.dice = new int[]{6, 6};
+//        this.dice = new int[]{rand.nextInt(6) + 1, rand.nextInt(6) + 1};
 
         // Genereaza mutarile ramase in functie de zarul generate
         // Daca e dubla => 4 mutari, altfel 2 mutari

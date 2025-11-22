@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -52,6 +54,7 @@ public class Board {
     private int nextTurn;
 
     private int[] dice = new int[2];
+    private final List<Integer> remainingMoves = new ArrayList<>();
 
     private final Random rand = new Random();
     private final ObjectMapper mapper = new ObjectMapper();
@@ -62,64 +65,64 @@ public class Board {
 
     public Map<String, Serializable> serialize() {
         return Map.of(
-            "turn", currentTurn,
-            "roll", dice,
-            "board", board,
-            "whitesTaken", whitesTaken,
-            "blacksTaken", blacksTaken
+                "turn", currentTurn,
+                "roll", dice,
+                "board", board,
+                "whitesTaken", whitesTaken,
+                "blacksTaken", blacksTaken,
+                "remainingMoves", remainingMoves.toArray(new Integer[0])
         );
     }
 
     public boolean isValidMove(int color, int src, int dst) {
+        if (color != currentTurn)
+            return false;
+
         if (src < 0 || src >= SIZE || dst < 0 || dst >= SIZE)
             return false;
 
         if (board[src][0] != color)
             return false;
 
+        if (color == BLACK && blacksTaken > 0 || color == WHITE && whitesTaken > 0)
+            return false;
+
         if (board[src][0] == NONE || board[src][1] == 0)
             return false;
 
-        if (board[src][0] != board[dst][0] && board[dst][1] > 1)
+        if (color != board[dst][0] && board[dst][1] > 1)
             return false;
 
-        if(color == BLACK && blacksTaken > 0 || color == WHITE && whitesTaken > 0) {
-            return false;
-        }
-
-        return true;
+        // Verifica daca mutarea necesara este disponibila
+        return remainingMoves.contains(distance(src, dst));
     }
 
     public boolean isValidReenter(int color, int position) {
-        if(color == Board.BLACK && blacksTaken == 0) {
+        if (color != currentTurn)
+            return false;
+
+        if ((color == Board.BLACK && blacksTaken == 0) || (color == Board.WHITE && whitesTaken == 0)) {
             return false;
         }
 
-        if(color == Board.WHITE && whitesTaken == 0) {
+        if ((color == BLACK && (position > 5 || position < 0)) || (color == WHITE && (position > SIZE || position < 18))) {
             return false;
         }
 
-        if (color == BLACK && (position > 5 || position < 0)) {
+        if (color == WHITE && board[position][0] == BLACK && board[position][1] > 1) {
             return false;
         }
 
-        if(color == WHITE && (position > SIZE || position < 18)) {
+        if (color == BLACK && board[position][0] == WHITE && board[position][1] > 1) {
             return false;
         }
 
-        if(color == WHITE && board[position][0] == BLACK && board[position][1] > 1) {
-            return false;
-        }
-
-        if(color == BLACK && board[position][0] == WHITE && board[position][1] > 1) {
-            return false;
-        }
-
-        return true;
+        int requiredMove = (color == WHITE) ? 24 - position : position + 1;
+        return remainingMoves.contains(requiredMove);
     }
 
     /**
-     * Muta o piese de pe pozitia src pe pozitia dst. Daca in urma mutarii
+     * Muta o piesa de pe pozitia src pe pozitia dst. Daca in urma mutarii
      * o piesa este capturata se returneaza WHITE sau BLACK, altfel se returneaza NONE.
      * Se presupune ca mutarea e valida
      */
@@ -133,7 +136,7 @@ public class Board {
             // Daca pe locul unde mutam este o piese deja o piesa, aceasta e capturata
             if (board[dst][0] == WHITE) {
                 whitesTaken++;
-            } else if(board[dst][0] == BLACK) {
+            } else if (board[dst][0] == BLACK) {
                 blacksTaken++;
             }
 
@@ -143,9 +146,11 @@ public class Board {
         }
 
         board[src][1]--;
-        if(board[src][1] == 0) {
+        if (board[src][1] == 0) {
             board[src][0] = NONE;
         }
+
+        useRemainingMove(distance(src, dst));
 
         return taken;
     }
@@ -156,19 +161,19 @@ public class Board {
     public int reenter(int color, int position) {
         int taken = NONE;
 
-        if(board[position][0] == NONE) {
+        if (board[position][0] == NONE) {
             board[position][0] = color;
             board[position][1] = 1;
-        } else if(board[position][0] == color) {
+        } else if (board[position][0] == color) {
             board[position][1]++;
         } else {
-            if(board[position][0] == BLACK) {
+            if (board[position][0] == BLACK) {
                 blacksTaken++;
             } else {
                 whitesTaken++;
             }
 
-            taken =  board[position][0];
+            taken = board[position][0];
             board[position][0] = color;
             board[position][1] = 1;
         }
@@ -179,18 +184,26 @@ public class Board {
             blacksTaken--;
         }
 
+        int requiredMove = (color == WHITE) ? 24 - position : position + 1;
+        useRemainingMove(requiredMove);
+
         return taken;
     }
 
-    /**
-     * Mergi la urmatoarea tura
-     */
-    public void advance() {
-        int tmp = currentTurn;
-        currentTurn = nextTurn;
-        nextTurn = tmp;
-        dice[0] = 0;
-        dice[1] = 0;
+    public int[] rollDice() {
+        // Genereaza zarul random
+        this.dice = new int[]{rand.nextInt(6) + 1, rand.nextInt(6) + 1};
+
+        // Genereaza mutarile ramase in functie de zarul generate
+        // Daca e dubla => 4 mutari, altfel 2 mutari
+        remainingMoves.clear();
+        if (dice[0] == dice[1]) {
+            remainingMoves.addAll(List.of(dice[0], dice[0], dice[0], dice[0]));
+        } else {
+            remainingMoves.addAll(List.of(dice[0], dice[1]));
+        }
+
+        return dice;
     }
 
     public void reset() {
@@ -208,6 +221,9 @@ public class Board {
 
         currentTurn = WHITE;
         nextTurn = BLACK;
+
+        remainingMoves.clear();
+        dice[0] = dice[1] = 0;
     }
 
     public void place(int piece, int position, int count) {
@@ -215,11 +231,37 @@ public class Board {
         board[position][1] = count;
     }
 
-    public int[] rollDice() {
-        this.dice = new int[]{rand.nextInt(6) + 1, rand.nextInt(6) + 1};
-        return dice;
+    /**
+     * Foloseste una din mutarile remase.
+     * Daca s-a folosit ultima mutare avanseaza automat
+     */
+    private void useRemainingMove(int move) {
+        remainingMoves.remove(Integer.valueOf(move));
+        if (remainingMoves.isEmpty()) {
+            advance();
+        }
     }
 
+    private int distance(int src, int dst) {
+        return Math.abs(dst - src);
+    }
+
+    /**
+     * Mergi la urmatoarea tura
+     */
+    private void advance() {
+        int tmp = currentTurn;
+        currentTurn = nextTurn;
+        nextTurn = tmp;
+
+        dice[0] = 0;
+        dice[1] = 0;
+        remainingMoves.clear();
+    }
+
+    /**
+     * Print pentru debugging
+     */
     public void print() {
         System.out.println("    13  14  15  16  17  18    19  20  21  22  23  24");
         System.out.println("    ------------------------------------------------");

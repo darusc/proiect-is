@@ -1,8 +1,6 @@
 package com.example.proiectis.game;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -79,6 +77,10 @@ public class Board {
         );
     }
 
+    public boolean hasAnyLegalMove(int color) {
+        return canMove(color) || canReenter(color) || canRemove(color);
+    }
+
     public boolean isValidMove(int color, int src, int dst) {
         if (color != currentTurn)
             return false;
@@ -131,7 +133,7 @@ public class Board {
             return false;
         }
 
-        if(color == WHITE && !whiteCanRemove || color == BLACK && !blackCanRemove) {
+        if (color == WHITE && !whiteCanRemove || color == BLACK && !blackCanRemove) {
             return false;
         }
 
@@ -222,7 +224,7 @@ public class Board {
             board[position][0] = NONE;
         }
 
-        if(color == WHITE) {
+        if (color == WHITE) {
             whitesRemoved++;
         } else {
             blacksRemoved++;
@@ -245,11 +247,16 @@ public class Board {
             remainingMoves.addAll(List.of(dice[0], dice[1]));
         }
 
+        // Daca nu exista nicio mutare legala cu zarul generat treci la urmatoarea tura
+        if (!hasAnyLegalMove(currentTurn)) {
+            advance();
+        }
+
         return dice;
     }
 
     public void reset() {
-        setupBeforeRemovingState();
+        setupInitialState();
         remainingMoves.clear();
         dice[0] = dice[1] = 0;
         whitesTaken = blacksTaken = 0;
@@ -267,9 +274,11 @@ public class Board {
      * Foloseste una din mutarile remase.
      * Daca s-a folosit ultima mutare avanseaza automat
      */
-    private void useRemainingMove(int move) {
+    void useRemainingMove(int move) {
         remainingMoves.remove(Integer.valueOf(move));
-        if (remainingMoves.isEmpty()) {
+        // Daca s-au folosit toate mutarile sau nu mai exista nicio
+        // mutare legala pentru jucatorul curent  la urmatoarea tura
+        if (remainingMoves.isEmpty() || !hasAnyLegalMove(currentTurn)) {
             advance();
         }
     }
@@ -277,18 +286,18 @@ public class Board {
     /**
      * Verifica daca toate piese sunt in casa si jucatorul poate incepe sa scoate piese
      */
-    private void checkIfAllPiecesInHome() {
+    void checkIfAllPiecesInHome() {
         int count = 0;
-        for(int i = 0; i < 6; i++) {
-            if(board[i][0] == WHITE) {
+        for (int i = 0; i < 6; i++) {
+            if (board[i][0] == WHITE) {
                 count += board[i][1];
             }
         }
         whiteCanRemove = (count + whitesRemoved == 15);
 
         count = 0;
-        for(int i = 18; i < 24; i++) {
-            if(board[i][0] == BLACK) {
+        for (int i = 18; i < 24; i++) {
+            if (board[i][0] == BLACK) {
                 count += board[i][1];
             }
         }
@@ -314,10 +323,97 @@ public class Board {
         checkIfAllPiecesInHome();
     }
 
+    private boolean canReenter(int color) {
+        int taken = (color == WHITE ? whitesTaken : blacksTaken);
+        if (taken == 0) {
+            return false;
+        }
 
-    // ======================================
-    // Functii pentru setarea starii initiale
-    // ======================================
+        for (int die : remainingMoves) {
+            int dest = (color == WHITE) ? 24 - die : die - 1;
+
+            if (dest < 0 || dest > 23) {
+                continue;
+            }
+
+            // O piese se poate repune daca pozitia de destinatie
+            // e libera, exista o singura piesa (de alta culoare) sau e aceeasi culoare
+            if (board[dest][1] == 0 || board[dest][0] == color || board[dest][1] == 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean canMove(int color) {
+        if (color == WHITE && whitesTaken > 0 || color == BLACK && blacksTaken > 0) {
+            return false;
+        }
+
+        for (int pos = 0; pos < 24; pos++) {
+            // Daca pe pozitia pos e o piesa de alta culoare sau nu e nimic
+            if (board[pos][0] != color || board[pos][1] == 0) {
+                continue;
+            }
+
+            for (int die : remainingMoves) {
+                int direction = (color == WHITE ? -1 : 1);
+                int dest = pos + direction * die;
+
+                if (dest < 0 || dest > 23) {
+                    continue;
+                }
+
+                // O piese se poate muta pe pozitia de destinatie daca
+                // e libera, exista o singura piesa (de alta culoare) sau e aceeasi culoare
+                if (board[dest][1] == 0 || board[dest][0] == color || board[dest][1] == 1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean canRemove(int color) {
+        boolean canRemove = (color == WHITE ? whiteCanRemove : blackCanRemove);
+        if (!canRemove) {
+            return false;
+        }
+
+        for (int die : remainingMoves) {
+            if (color == WHITE) {
+                int from = die - 1;
+                if (from >= 0 && from <= 5 && board[from][0] == WHITE && board[from][1] > 0) {
+                    return true;
+                }
+
+                // Daca nu exista o pozitie directa data de valoarea zarului
+                // scoate piesa de pe pozitia ce mai inspre margine
+                // (0 <= orice pozitie < valoarea zarului)
+//                for (int pos = 0; pos < die - 1 && pos < 6; pos++)
+//                    if (board[pos][0] == WHITE && board[pos][1] > 0)
+//                        return true;
+            } else {
+                int from = 24 - die;
+                if (from >= 18 && from <= 23 && board[from][0] == BLACK && board[from][1] > 0) {
+                    return true;
+                }
+
+                // Daca nu exista o pozitie directa data de valoarea zarului
+                // scoate piesa de pe pozitia ce mai inspre margine
+                // (23 >= orice pozitie > valoarea zarului)
+//                for (int pos = 23; pos > from && pos >= 18; pos--)
+//                    if (board[pos][0] == BLACK && board[pos][1] > 0)
+//                        return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Stare initiala piese pe tabla
+     */
     private void setupInitialState() {
         place(BLACK, 0, 2);
         place(WHITE, 5, 5);
@@ -329,7 +425,11 @@ public class Board {
         place(WHITE, 23, 2);
     }
 
-    private void setupBeforeRemovingState() {
+    /**
+     * Stare initiala piese pe tabla inainte de a avea toate piese in casa
+     * (pentru testare)
+     */
+    void setupBeforeRemovingState() {
         place(WHITE, 0, 5);
         place(WHITE, 1, 4);
         place(WHITE, 2, 3);
@@ -342,6 +442,7 @@ public class Board {
         place(BLACK, 22, 2);
         place(BLACK, 23, 2);
     }
+
 
     /**
      * Print pentru debugging

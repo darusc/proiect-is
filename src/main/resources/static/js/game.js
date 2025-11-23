@@ -57,13 +57,35 @@ class Game {
         return this.state['blacksTaken'];
     }
 
-    renderState(state) {
-        this.renderer.board(state['board']);
-        this.renderer.dice(state['roll'], state['remainingMoves']);
-        this.renderer.capturedPieces(state['whitesTaken'], state['blacksTaken']);
+    get whitesRemoved() {
+        return this.state['whitesRemoved'];
+    }
 
-        if(this.color === Game.WHITE && state['whitesTaken'] > 0 || this.color === Game.BLACK && state['blacksTaken'] > 0) {
-            this.renderer.highlightReentry();
+    get blacksRemoved() {
+        return this.state['blacksRemoved'];
+    }
+
+    get canRemove() {
+        return this.state['canRemove'];
+    }
+
+    renderState(state) {
+        this.renderer.board(state['board'], this.color);
+        this.renderer.dice(state['roll'], state['remainingMoves'], this.myTurn);
+
+        const captured = {whites: this.whitesTaken, blacks: this.blacksTaken};
+        const removed = {whites: this.whitesRemoved, blacks: this.blacksRemoved};
+        this.renderer.barPieces(captured, removed);
+
+        // Highlight triunghiuri doar daca s-a dat cu zarul
+        if(state['roll'] !== [0, 0] && this.myTurn) {
+            if (this.color === Game.WHITE && state['whitesTaken'] > 0 || this.color === Game.BLACK && state['blacksTaken'] > 0) {
+                this.renderer.highlightReentry(this.remainingMoves, this.color);
+            }
+
+            if (this.canRemove) {
+                this.renderer.highlightRemove(this.remainingMoves, this.color);
+            }
         }
     }
 
@@ -96,5 +118,15 @@ class Game {
                 color: this.color, from, to
             }
         });
+    }
+
+    remove(from) {
+        this.ws.broadcast({
+            action: "GAME",
+            type: "remove",
+            payload: {
+                color: this.color, position: from
+            }
+        })
     }
 }

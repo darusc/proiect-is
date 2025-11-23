@@ -19,6 +19,7 @@ public class GameManager implements CustomWebSocketListener {
     public final static String REQUEST_ROLL = "roll_request";
     public final static String REQUEST_MOVE = "move";
     public final static String REQUEST_REENTER = "reenter";
+    public final static String REQUEST_REMOVE = "remove";
 
     public GameManager(CustomWebSocketHandler customWebSocketHandler) {
         this.customWebSocketHandler = customWebSocketHandler;
@@ -91,6 +92,10 @@ public class GameManager implements CustomWebSocketListener {
             case REQUEST_REENTER:
                 reenter(board, channel, payload.get("color").asInt(), payload.get("position").asInt());
                 break;
+
+            case REQUEST_REMOVE:
+                remove(board, channel, payload.get("color").asInt(), payload.get("position").asInt());
+                break;
         }
     }
 
@@ -116,6 +121,16 @@ public class GameManager implements CustomWebSocketListener {
         }
 
         board.move(src, dst);
+        customWebSocketHandler.broadcast(channel, Message.state(board.serialize()));
+    }
+
+    private void remove(Board board, Channel channel, int color, int position) throws Exception {
+        if(!board.isValidRemove(color, position)) {
+            customWebSocketHandler.broadcast(channel, Message.invalidRemove("Invalid remove"));
+            return;
+        }
+
+        board.remove(color, position);
         customWebSocketHandler.broadcast(channel, Message.state(board.serialize()));
     }
 }

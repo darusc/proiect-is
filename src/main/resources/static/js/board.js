@@ -1,5 +1,15 @@
 class Board {
 
+    onMove = () => {};
+    onReentry = () => {};
+    onRemove = () => {};
+
+    /**
+     * Functie folosita pentru a obtine date necesare pentru highlight
+     * Trebuie sa returneze un array de forma [remainingMoves, currentTurn, color]
+     */
+    highlightConfigGetter = () => []
+
     constructor() {
         /**
          * @type {Element}
@@ -16,8 +26,9 @@ class Board {
         return {
             board: this.#renderBoard.bind(this),
             dice: this.#renderDice.bind(this),
-            capturedPieces: this.#renderCapturedPieces.bind(this),
-            highlightReentry: this.#highlightReentry.bind(this)
+            barPieces: this.#renderBarPieces.bind(this),
+            highlightReentry: this.#highlightReentry.bind(this),
+            highlightRemove: this.#highlightRemove.bind(this)
         }
     }
 
@@ -43,46 +54,58 @@ class Board {
         return triangle.classList.contains('highlight');
     }
 
+    #isTriangleHighlightedForReentry(triangle) {
+        return triangle.classList.contains('highlight') && triangle.classList.contains('reentry');
+    }
+
+    #isTriangleHighlightedForRemoval(triangle) {
+        return triangle.classList.contains('highlight') && triangle.classList.contains('remove');
+    }
+
     /**
      * @param {...Element} triangle
      */
     #onTriangleClick(triangle) {
+        const [remainingMoves, color, myTurn] = this.highlightConfigGetter()
         const point = parseInt(triangle.dataset['point']);
 
-        const taken = (game.color === Game.WHITE) ? game.whitesTaken : game.blacksTaken;
+        if(!myTurn) {
+            return;
+        }
 
-        if (taken > 0 && triangle.classList.contains('highlight') && triangle.classList.contains('reentry')) {
-            game.reenter(point - 1);
+        if (this.#isTriangleHighlightedForReentry(triangle)) {
+            this.onReentry(point - 1);
             this.#clearHighlight();
-            this.selectedTriangle = null;
+            return;
+        }
+
+        if (this.#isTriangleHighlightedForRemoval(triangle)) {
+            this.onRemove(point - 1);
+            this.#clearHighlight();
             return;
         }
 
         if (this.selectedTriangle && this.#isTriangleHighlighted(triangle)) {
             const from = parseInt(this.selectedTriangle.dataset['point']);
-            const to = point;
-
-            const pieces = this.#getPieces(this.selectedTriangle);
-            if (pieces.length === 0 || this.#getPieceColor(pieces[0]) !== game.color) {
-                return;
-            }
-
-            game.move(from - 1, to - 1);
-
+            this.onMove(from - 1, point - 1);
             this.#clearHighlight();
-            this.selectedTriangle = null;
-        } else {
+            return;
+        }
+
+        this.#clearHighlight();
+
+        const pieces = triangle.querySelectorAll('.piece');
+        if(this.#getPieceColor(pieces[0]) === color) {
             this.selectedTriangle = triangle;
-            this.#clearHighlight();
-            this.#highlightPossibleMoves(triangle);
+            this.#highlightPossibleMoves(triangle, remainingMoves, color);
         }
     }
 
-    #highlightPossibleMoves(triangle) {
+    #highlightPossibleMoves(triangle, remainingMoves, color) {
         const from = parseInt(triangle.dataset['point']);
-        const direction = game.color === Game.WHITE ? -1 : 1;
+        const direction = color === Game.WHITE ? -1 : 1;
 
-        game.remainingMoves.forEach(offset => {
+        remainingMoves.forEach(offset => {
             const to = from + offset * direction;
             if (to < 1 || to > 24) {
                 return;
@@ -97,23 +120,15 @@ class Board {
 
             if (pieces.length === 0) {
                 destTriangle.classList.add('highlight');
-            } else {
-                const color = this.#getPieceColor(pieces[0]);
-                if (color === game.color || pieces.length === 1) {
-                    destTriangle.classList.add('highlight');
-                }
+            } else if (this.#getPieceColor(pieces[0]) === color || pieces.length === 1) {
+                destTriangle.classList.add('highlight');
             }
         });
     }
 
-    #highlightReentry() {
-        const taken = game.color === Game.WHITE ? game.whitesTaken : game.blacksTaken;
-        if (taken === 0) {
-            return;
-        }
-
-        game.remainingMoves.forEach(offset => {
-            const dest = game.color === Game.WHITE ? 24 - offset + 1 : offset;
+    #highlightReentry(remainingMoves, turn) {
+        remainingMoves.forEach(offset => {
+            const dest = turn === Game.WHITE ? 24 - offset + 1 : offset;
             if (dest < 1 || dest > 24) {
                 return;
             }
@@ -129,18 +144,38 @@ class Board {
                 destTriangle.classList.add('highlight', 'reentry');
             } else {
                 const color = this.#getPieceColor(pieces[0]);
-                if (color === game.color || pieces.length === 1) {
+                if (color === turn || pieces.length === 1) {
                     destTriangle.classList.add('highlight', 'reentry');
                 }
             }
         });
     }
 
-    #clearHighlight() {
-        this.triangles.forEach(t => t.classList.remove('highlight', 'reentry'));
+    #highlightRemove(remainingMoves, turn) {
+        remainingMoves.forEach(offset => {
+            const dest = turn === Game.WHITE ? offset : 24 - offset + 1;
+            if (dest < 1 || dest > 24) {
+                return;
+            }
+
+            const destTriangle = document.querySelector(`.triangle[data-point="${dest}"]`);
+            if (!destTriangle) {
+                return;
+            }
+
+            const pieces = destTriangle.querySelectorAll('.piece');
+            if (pieces.length !== 0 && this.#getPieceColor(pieces[0]) === turn) {
+                destTriangle.classList.add('highlight', 'remove');
+            }
+        });
     }
 
-    #renderBoard(board) {
+    #clearHighlight() {
+        this.selectedTriangle = null;
+        this.triangles.forEach(t => t.classList.remove('highlight', 'reentry', 'remove'));
+    }
+
+    #renderBoard(board, turn) {
         this.triangles.forEach(t => t.innerHTML = "");
         for (let i = 0; i < board.length; i++) {
             const row = board[i];
@@ -157,17 +192,17 @@ class Board {
             }
         }
 
-        if (game.color === 66) {
+        if (turn === Game.BLACK) {
             document.querySelector('.board').classList.add('flip');
         }
     }
 
     /**
-     *
-     * @param dice
-     * @param remainingMoves
+     * @param {...[]} dice
+     * @param {...[]} remainingMoves
+     * @param {...boolean} myTurn
      */
-    #renderDice(dice, remainingMoves) {
+    #renderDice(dice, remainingMoves, myTurn) {
         document.querySelectorAll('.dice').forEach(e => {
             e.classList.remove('visible', 'double', 'grayed');
         });
@@ -179,7 +214,7 @@ class Board {
         // si dezactiveaza-l pentru oponent
         if (dice[0] === 0 && dice[1] === 0) {
             rollButton.style.display = 'block';
-            if (!game.myTurn) {
+            if (!myTurn) {
                 rollButton.classList.add('grayed');
                 rollButton.disabled = true;
             } else {
@@ -216,23 +251,39 @@ class Board {
         }
     }
 
-    #renderCapturedPieces(whites, blacks) {
+    #renderBarPieces(captured, removed) {
         const boxW = document.querySelector('.box.w');
         const boxB = document.querySelector('.box.b');
 
         boxW.innerHTML = "";
         boxB.innerHTML = "";
 
-        for (let i = 0; i < whites; i++) {
+        // Piesele albe scoase de jucatorul alb
+        for (let i = 0; i < removed['whites']; i++) {
             const captured = document.createElement('span');
             captured.classList.add('captured-piece', 'w');
             boxW.appendChild(captured);
         }
 
-        for (let i = 0; i < blacks; i++) {
+        // Piesele negre capturate de jucatorul alb
+        for(let i = 0; i < captured['blacks']; i++) {
+            const captured = document.createElement('span');
+            captured.classList.add('captured-piece', 'b');
+            boxW.appendChild(captured);
+        }
+
+        // Piesele negre scoase de jucatorul negru
+        for (let i = 0; i < removed['blacks']; i++) {
             const captured = document.createElement('span');
             captured.classList.add('captured-piece', 'b');
             boxB.appendChild(captured);
+        }
+
+        // Piesele albe capturate de jucatorul negru
+        for(let i = 0; i < captured['whites']; i++) {
+            const captured = document.createElement('span');
+            captured.classList.add('captured-piece', 'w');
+            boxW.appendChild(captured);
         }
     }
 }

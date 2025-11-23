@@ -40,16 +40,18 @@ public class Board {
     //    12  11  10  9   8   7   6   5   4   3   2   1
     private final int[][] board = new int[SIZE][2];
 
-    @Getter
+    // Piesele capturate de adversar
     private int whitesTaken;
-    @Getter
     private int blacksTaken;
+
+    // Piesele scoasa de jucator
+    private int whitesRemoved;
+    private int blacksRemoved;
 
     // Daca toate piesele sunt in casa
     private boolean whiteCanRemove;
     private boolean blackCanRemove;
 
-    @Getter
     private int currentTurn;
     private int nextTurn;
 
@@ -70,6 +72,9 @@ public class Board {
                 "board", board,
                 "whitesTaken", whitesTaken,
                 "blacksTaken", blacksTaken,
+                "whitesRemoved", whitesRemoved,
+                "blacksRemoved", blacksRemoved,
+                "canRemove", (currentTurn == WHITE ? whiteCanRemove : blackCanRemove),
                 "remainingMoves", remainingMoves.toArray(new Integer[0])
         );
     }
@@ -121,6 +126,26 @@ public class Board {
         return remainingMoves.contains(requiredMove);
     }
 
+    public boolean isValidRemove(int color, int position) {
+        if (color != currentTurn) {
+            return false;
+        }
+
+        if(color == WHITE && !whiteCanRemove || color == BLACK && !blackCanRemove) {
+            return false;
+        }
+
+        if ((color == BLACK && (position < 18 || position > 23)) || (color == WHITE && (position > 6 || position < 0))) {
+            return false;
+        }
+
+        if (board[position][0] != color || board[position][1] < 1) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * Muta o piesa de pe pozitia src pe pozitia dst. Daca in urma mutarii
      * o piesa este capturata se returneaza WHITE sau BLACK, altfel se returneaza NONE.
@@ -151,6 +176,7 @@ public class Board {
         }
 
         useRemainingMove(distance(src, dst));
+        checkIfAllPiecesInHome();
 
         return taken;
     }
@@ -190,10 +216,25 @@ public class Board {
         return taken;
     }
 
+    public void remove(int color, int position) {
+        board[position][1]--;
+        if (board[position][1] == 0) {
+            board[position][0] = NONE;
+        }
+
+        if(color == WHITE) {
+            whitesRemoved++;
+        } else {
+            blacksRemoved++;
+        }
+
+        int requiredMove = (color == WHITE) ? position + 1 : 24 - position;
+        useRemainingMove(requiredMove);
+    }
+
     public int[] rollDice() {
         // Genereaza zarul random
-        this.dice = new int[]{6, 6};
-//        this.dice = new int[]{rand.nextInt(6) + 1, rand.nextInt(6) + 1};
+        this.dice = new int[]{rand.nextInt(6) + 1, rand.nextInt(6) + 1};
 
         // Genereaza mutarile ramase in functie de zarul generate
         // Daca e dubla => 4 mutari, altfel 2 mutari
@@ -208,23 +249,13 @@ public class Board {
     }
 
     public void reset() {
-        place(BLACK, 0, 2);
-        place(WHITE, 5, 5);
-        place(WHITE, 7, 3);
-        place(BLACK, 11, 5);
-        place(WHITE, 12, 5);
-        place(BLACK, 16, 3);
-        place(BLACK, 18, 5);
-        place(WHITE, 23, 2);
-
-        whitesTaken = 0;
-        blacksTaken = 0;
-
-        currentTurn = WHITE;
-        nextTurn = BLACK;
-
+        setupBeforeRemovingState();
         remainingMoves.clear();
         dice[0] = dice[1] = 0;
+        whitesTaken = blacksTaken = 0;
+        whitesRemoved = blacksRemoved = 0;
+        currentTurn = WHITE;
+        nextTurn = BLACK;
     }
 
     public void place(int piece, int position, int count) {
@@ -243,6 +274,27 @@ public class Board {
         }
     }
 
+    /**
+     * Verifica daca toate piese sunt in casa si jucatorul poate incepe sa scoate piese
+     */
+    private void checkIfAllPiecesInHome() {
+        int count = 0;
+        for(int i = 0; i < 6; i++) {
+            if(board[i][0] == WHITE) {
+                count += board[i][1];
+            }
+        }
+        whiteCanRemove = (count + whitesRemoved == 15);
+
+        count = 0;
+        for(int i = 18; i < 24; i++) {
+            if(board[i][0] == BLACK) {
+                count += board[i][1];
+            }
+        }
+        blackCanRemove = (count + blacksRemoved == 15);
+    }
+
     private int distance(int src, int dst) {
         return Math.abs(dst - src);
     }
@@ -258,6 +310,37 @@ public class Board {
         dice[0] = 0;
         dice[1] = 0;
         remainingMoves.clear();
+
+        checkIfAllPiecesInHome();
+    }
+
+
+    // ======================================
+    // Functii pentru setarea starii initiale
+    // ======================================
+    private void setupInitialState() {
+        place(BLACK, 0, 2);
+        place(WHITE, 5, 5);
+        place(WHITE, 7, 3);
+        place(BLACK, 11, 5);
+        place(WHITE, 12, 5);
+        place(BLACK, 16, 3);
+        place(BLACK, 18, 5);
+        place(WHITE, 23, 2);
+    }
+
+    private void setupBeforeRemovingState() {
+        place(WHITE, 0, 5);
+        place(WHITE, 1, 4);
+        place(WHITE, 2, 3);
+        place(WHITE, 3, 2);
+        place(WHITE, 10, 1);
+        place(BLACK, 18, 2);
+        place(BLACK, 19, 3);
+        place(BLACK, 20, 4);
+        place(BLACK, 21, 2);
+        place(BLACK, 22, 2);
+        place(BLACK, 23, 2);
     }
 
     /**

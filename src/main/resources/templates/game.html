@@ -23,7 +23,7 @@
             </div>
 
             <div class="bar">
-                    <span class="box w">
+                    <span class="box b">
                     </span>
             </div>
 
@@ -145,7 +145,7 @@
             </div>
 
             <div class="bar bottom">
-                <span class="box b"></span>
+                <span class="box w"></span>
             </div>
 
             <div class="side">
@@ -171,6 +171,11 @@
     <script>
         const board = new Board();
         const game = new Game(playerId, roomId, board.getRenderer());
+
+        board.onMove = (from, to) => game.move(from, to);
+        board.onRemove = (from) => game.remove(from);
+        board.onReentry = (position) => game.reenter(position);
+        board.highlightConfigGetter = () => [game.remainingMoves, game.color, game.myTurn];
 
         document.querySelector('.roll').addEventListener('click', () => {
             if (game.myTurn && game.remainingMoves.length === 0) {

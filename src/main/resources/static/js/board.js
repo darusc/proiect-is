@@ -163,9 +163,32 @@ class Board {
                 return;
             }
 
+            // Verifica daca se poate scoate de pe pozitia data de zar
             const pieces = destTriangle.querySelectorAll('.piece');
-            if (pieces.length !== 0 && this.#getPieceColor(pieces[0]) === turn) {
+            if (pieces.length > 0 && this.#getPieceColor(pieces[0]) === turn) {
                 destTriangle.classList.add('highlight', 'remove');
+            } else {
+                // Cauta prima pozitia valida de pe care se poate scoate de dupa zar
+                // (Cea mai departata de 1 pentru alb, si cea mai departata de 24 pentru negru)
+                if(turn === Game.WHITE) {
+                    for(let pos = offset - 1; pos > 0; pos--) {
+                        const t = document.querySelector(`.triangle[data-point="${pos}"]`);
+                        const pcs = t.querySelectorAll('.piece');
+                        if(pcs.length > 0 && this.#getPieceColor(pcs[0]) === turn) {
+                            t.classList.add('highlight', 'remove');
+                            break;
+                        }
+                    }
+                } else {
+                    for(let pos = 24 - offset; pos <= 24; pos++) {
+                        const t = document.querySelector(`.triangle[data-point="${pos}"]`);
+                        const pcs = t.querySelectorAll('.piece');
+                        if(pcs.length > 0 && this.#getPieceColor(pcs[0]) === turn) {
+                            t.classList.add('highlight', 'remove');
+                            break;
+                        }
+                    }
+                }
             }
         });
     }

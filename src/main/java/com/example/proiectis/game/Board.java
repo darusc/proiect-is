@@ -145,7 +145,29 @@ public class Board {
             return false;
         }
 
-        return true;
+        // Verifica daca piese se poate scoate direct pe baza zarului
+        int requiredMove = (color == WHITE) ? position + 1 : 24 - position;
+        if (remainingMoves.contains(requiredMove)) {
+            return true;
+        }
+
+        // Verifica daca numarul zarului este mai mare decat ultimul spatiu
+        // ocupat pentru a permite scoaterea piesei de pe ultimul spatiu
+        if(color == WHITE) {
+            for(int pos = position + 1; pos < 6; pos++) {
+                if(board[pos][0] == WHITE && board[pos][1] > 0) {
+                    return false;
+                }
+            }
+            return remainingMoves.stream().anyMatch(m -> m > requiredMove);
+        } else {
+            for(int pos = position - 1; pos >= 18; pos--) {
+                if(board[pos][0] == BLACK && board[pos][1] > 0) {
+                    return false;
+                }
+            }
+            return remainingMoves.stream().anyMatch(m -> m > requiredMove);
+        }
     }
 
     /**
@@ -231,7 +253,8 @@ public class Board {
         }
 
         int requiredMove = (color == WHITE) ? position + 1 : 24 - position;
-        useRemainingMove(requiredMove);
+        int moveToUse = remainingMoves.stream().filter(m -> m >= requiredMove).min(Integer::compareTo).orElse(requiredMove);
+        useRemainingMove(moveToUse);
     }
 
     public int[] rollDice() {
@@ -391,9 +414,9 @@ public class Board {
                 // Daca nu exista o pozitie directa data de valoarea zarului
                 // scoate piesa de pe pozitia ce mai inspre margine
                 // (0 <= orice pozitie < valoarea zarului)
-//                for (int pos = 0; pos < die - 1 && pos < 6; pos++)
-//                    if (board[pos][0] == WHITE && board[pos][1] > 0)
-//                        return true;
+                for (int pos = 0; pos < die - 1 && pos < 6; pos++)
+                    if (board[pos][0] == WHITE && board[pos][1] > 0)
+                        return true;
             } else {
                 int from = 24 - die;
                 if (from >= 18 && from <= 23 && board[from][0] == BLACK && board[from][1] > 0) {
@@ -403,9 +426,9 @@ public class Board {
                 // Daca nu exista o pozitie directa data de valoarea zarului
                 // scoate piesa de pe pozitia ce mai inspre margine
                 // (23 >= orice pozitie > valoarea zarului)
-//                for (int pos = 23; pos > from && pos >= 18; pos--)
-//                    if (board[pos][0] == BLACK && board[pos][1] > 0)
-//                        return true;
+                for (int pos = 23; pos > from && pos >= 18; pos--)
+                    if (board[pos][0] == BLACK && board[pos][1] > 0)
+                        return true;
             }
         }
         return false;

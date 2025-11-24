@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabla de Table</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/board.css">
+</head>
+
+<body class="flex flex-col items-center p-6">
+    <div class="board">
+        <div class="row">
+            <div class="side">
+                <div class="triangle" data-point="13"></div>
+                <div class="triangle" data-point="14"></div>
+                <div class="triangle" data-point="15"></div>
+                <div class="triangle" data-point="16"></div>
+                <div class="triangle" data-point="17"></div>
+                <div class="triangle" data-point="18"></div>
+            </div>
+
+            <div class="bar">
+                    <span class="box b">
+                    </span>
+            </div>
+
+            <div class="side">
+                <div class="triangle" data-point="19"></div>
+                <div class="triangle" data-point="20"></div>
+                <div class="triangle" data-point="21"></div>
+                <div class="triangle" data-point="22"></div>
+                <div class="triangle" data-point="23"></div>
+                <div class="triangle" data-point="24"></div>
+            </div>
+        </div>
+
+        <div class="spacer">
+            <div class="bar center">
+                <button class="roll">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                </button>
+
+
+                <div class="dice-container">
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-0">
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-1">
+                        <circle r="4" cx="9" cy="9"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-2">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-3">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="9" cy="9"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-4">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="14"></circle>
+                        <circle r="2" cx="14" cy="4"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-5">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="14"></circle>
+                        <circle r="2" cx="9" cy="9"></circle>
+                        <circle r="2" cx="14" cy="4"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-6">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="14"></circle>
+                        <circle r="2" cx="14" cy="9"></circle>
+                        <circle r="2" cx="4" cy="9"></circle>
+                        <circle r="2" cx="14" cy="4"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                </div>
+                <div class="dice-container">
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-0"></svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-1">
+                        <circle r="4" cx="9" cy="9"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-2">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-3">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="9" cy="9"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-4">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="14"></circle>
+                        <circle r="2" cx="14" cy="4"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-5">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="14"></circle>
+                        <circle r="2" cx="9" cy="9"></circle>
+                        <circle r="2" cx="14" cy="4"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                    <svg viewBox="0 0 18 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+                         focusable="false" preserveAspectRatio="xMidYMid meet" class="dice dice-6">
+                        <circle r="2" cx="14" cy="14"></circle>
+                        <circle r="2" cx="4" cy="14"></circle>
+                        <circle r="2" cx="14" cy="9"></circle>
+                        <circle r="2" cx="4" cy="9"></circle>
+                        <circle r="2" cx="14" cy="4"></circle>
+                        <circle r="2" cx="4" cy="4"></circle>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="side">
+                <div class="triangle down" data-point="12"></div>
+                <div class="triangle down" data-point="11"></div>
+                <div class="triangle down" data-point="10"></div>
+                <div class="triangle down" data-point="9"></div>
+                <div class="triangle down" data-point="8"></div>
+                <div class="triangle down" data-point="7"></div>
+            </div>
+
+            <div class="bar bottom">
+                <span class="box w"></span>
+            </div>
+
+            <div class="side">
+                <div class="triangle down" data-point="6"></div>
+                <div class="triangle down" data-point="5"></div>
+                <div class="triangle down" data-point="4"></div>
+                <div class="triangle down" data-point="3"></div>
+                <div class="triangle down" data-point="2"></div>
+                <div class="triangle down" data-point="1"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/ws.js"></script>
+    <script src="/js/game.js"></script>
+    <script src="/js/board.js"></script>
+
+    <script th:inline="javascript">
+        const playerId = /*[[${playerId}]]*/ 0;
+        const roomId = /*[[${roomId}]]*/ "";
+    </script>
+
+    <script>
+        const board = new Board();
+        const game = new Game(playerId, roomId, board.getRenderer());
+
+        board.onMove = (from, to) => game.move(from, to);
+        board.onRemove = (from) => game.remove(from);
+        board.onReentry = (position) => game.reenter(position);
+        board.highlightConfigGetter = () => [game.remainingMoves, game.color, game.myTurn];
+
+        document.querySelector('.roll').addEventListener('click', () => {
+            if (game.myTurn && game.remainingMoves.length === 0) {
+                game.requestRoll();
+            }
+        });
+    </script>
+</body>
+</html>

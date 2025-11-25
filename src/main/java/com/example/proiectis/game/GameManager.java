@@ -16,6 +16,11 @@ public class GameManager implements CustomWebSocketListener {
     private final CustomWebSocketHandler customWebSocketHandler;
     private final Map<Channel, Board> activeGames = new HashMap<>();
 
+    public final static String REQUEST_ROLL = "roll_request";
+    public final static String REQUEST_MOVE = "move";
+    public final static String REQUEST_REENTER = "reenter";
+    public final static String REQUEST_REMOVE = "remove";
+
     public GameManager(CustomWebSocketHandler customWebSocketHandler) {
         this.customWebSocketHandler = customWebSocketHandler;
         this.customWebSocketHandler.addListener(this);
@@ -31,14 +36,14 @@ public class GameManager implements CustomWebSocketListener {
             activeGames.putIfAbsent(client.getChannel(), new Board());
 
             // Start the game if the channel is full
-            if(client.getChannel().isFull()) {
+            if (client.getChannel().isFull()) {
                 Board board = activeGames.get(client.getChannel());
                 Object[] playerIds = client.getChannel()
                         .getClients()
                         .stream()
                         .map(Client::getId)
                         .toArray();
-                customWebSocketHandler.broadcast(client.getChannel(), Message.gameStart((int)playerIds[0], (int)playerIds[1]));
+                customWebSocketHandler.broadcast(client.getChannel(), Message.gameStart((int) playerIds[0], (int) playerIds[1]));
                 customWebSocketHandler.broadcast(client.getChannel(), Message.state(board.serialize()));
             }
         } catch (Exception e) {
@@ -66,7 +71,7 @@ public class GameManager implements CustomWebSocketListener {
     }
 
     private void process(Channel channel, JsonNode message) throws Exception {
-        if(!message.has("type") || !message.has("payload")) {
+        if (!message.has("type") || !message.has("payload")) {
             return;
         }
 
@@ -75,41 +80,57 @@ public class GameManager implements CustomWebSocketListener {
 
         Board board = activeGames.get(channel);
 
-        switch(type) {
-            case "roll_request":
+        switch (type) {
+            case REQUEST_ROLL:
                 roll(board, channel);
                 break;
-            case "move":
+
+            case REQUEST_MOVE:
                 move(board, channel, payload.get("color").asInt(), payload.get("from").asInt(), payload.get("to").asInt());
                 break;
-            case "advance": advance(board, channel);
+
+            case REQUEST_REENTER:
+                reenter(board, channel, payload.get("color").asInt(), payload.get("position").asInt());
+                break;
+
+            case REQUEST_REMOVE:
+                remove(board, channel, payload.get("color").asInt(), payload.get("position").asInt());
                 break;
         }
     }
 
     private void roll(Board board, Channel channel) throws Exception {
-        int[] dice = board.rollDice();
-        customWebSocketHandler.broadcast(channel, Message.rollResult(board.getCurrentTurn(), dice));
+        board.rollDice();
+        customWebSocketHandler.broadcast(channel, Message.state(board.serialize()));
+    }
+
+    private void reenter(Board board, Channel channel, int color, int position) throws Exception {
+        if (!board.isValidReenter(color, position)) {
+            customWebSocketHandler.broadcast(channel, Message.invalidReenter("Invalid reenter"));
+            return;
+        }
+
+        board.reenter(color, position);
+        customWebSocketHandler.broadcast(channel, Message.state(board.serialize()));
     }
 
     private void move(Board board, Channel channel, int color, int src, int dst) throws Exception {
-        if(!board.isValidMove(color, src, dst)) {
+        if (!board.isValidMove(color, src, dst)) {
             customWebSocketHandler.broadcast(channel, Message.invalidMove("Invalid move"));
             return;
         }
 
-        if(board.getCurrentTurn() != color) {
-            customWebSocketHandler.broadcast(channel, Message.invalidMove("Wrong turn"));
-            return;
-        }
-
         board.move(src, dst);
-
         customWebSocketHandler.broadcast(channel, Message.state(board.serialize()));
     }
 
-    private void advance(Board board, Channel channel) throws Exception {
-        board.advance();
+    private void remove(Board board, Channel channel, int color, int position) throws Exception {
+        if(!board.isValidRemove(color, position)) {
+            customWebSocketHandler.broadcast(channel, Message.invalidRemove("Invalid remove"));
+            return;
+        }
+
+        board.remove(color, position);
         customWebSocketHandler.broadcast(channel, Message.state(board.serialize()));
     }
 }

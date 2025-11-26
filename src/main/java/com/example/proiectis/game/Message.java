@@ -25,6 +25,13 @@ public class Message {
         );
     }
 
+    public static Object gameEnd(Object payload) {
+        return Map.of(
+                "type", "game_end",
+                "payload", payload
+        );
+    }
+
     public static Object invalidMove(String reason) {
         return Map.of(
                 "type", "invalid_move",

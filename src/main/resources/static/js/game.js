@@ -1,7 +1,8 @@
 class Game {
 
     static START = "game_start";
-    static STATE = "state"
+    static STATE = "state";
+    static END = "game_end";
 
     static WHITE = 87
     static BLACK = 66
@@ -33,6 +34,10 @@ class Game {
             case Game.STATE:
                 this.state = data['payload'];
                 this.renderState(this.state);
+                break;
+
+            case Game.END:
+                this.renderGameEndDialogue(data['payload']);
                 break;
 
             case "ERROR":
@@ -87,6 +92,14 @@ class Game {
                 this.renderer.highlightRemove(this.remainingMoves, this.color);
             }
         }
+    }
+
+    renderGameEndDialogue(data) {
+        const won = data['winner'] === this.color;
+        const player1 = this.color === Game.WHITE ? data['white'] : data['black'];
+        const player2 = this.color === Game.WHITE ? data['black'] : data['white'];
+
+        this.renderer.endGame(won, player1, player2);
     }
 
     requestRoll() {

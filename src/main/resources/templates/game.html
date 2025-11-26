@@ -159,6 +159,45 @@
         </div>
     </div>
 
+    <div id="endGameOverlay" class="overlay hidden">
+        <div id="endGameBox" class="popup scale-75 opacity-0">
+
+            <h2 id="endGameTitle" class="title"></h2>
+
+            <table class="score-table">
+                <tr class="avatars">
+                    <td id="p1name" class="player-name"></td>
+
+                    <td class="avatar">
+                        <div class="player-icon"></div>
+                    </td>
+
+                    <td class="avatar">
+                        <div class="player-icon"></div>
+                    </td>
+
+                    <td id="p2name" class="player-name"></td>
+                </tr>
+
+                <tr class="round-score">
+                    <td id="p1round" class="score"></td>
+                    <td></td>
+                    <td></td>
+                    <td id="p2round" class="score"></td>
+                </tr>
+
+                <tr class="total-score">
+                    <td id="p1total" class="score-total"></td>
+                    <td></td>
+                    <td></td>
+                    <td id="p2total" class="score-total"></td>
+                </tr>
+            </table>
+
+            <button id="endGameOk" class="ok-btn">➜</button>
+        </div>
+    </div>
+
     <script src="/js/ws.js"></script>
     <script src="/js/game.js"></script>
     <script src="/js/board.js"></script>
@@ -182,6 +221,10 @@
                 game.requestRoll();
             }
         });
+
+        document.getElementById("closeEndGame").onclick = () => {
+            document.getElementById("endGamePopup").classList.add("hidden");
+        };
     </script>
 </body>
 </html>

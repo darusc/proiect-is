@@ -1,9 +1,8 @@
 package com.example.proiectis.websocket;
 
-import com.example.proiectis.websocket.handler.CustomWebSocketHandlerImpl;
+import com.example.proiectis.websocket.handler.GameWebSocketHandlerImpl;
 import lombok.Getter;
 
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -27,7 +26,7 @@ public class Channel {
         clients.remove(session);
     }
 
-    public boolean isFull() {
-        return clients.size() >= CustomWebSocketHandlerImpl.MAX_ROOM_SIZE;
+    public boolean isFull(int roomSize) {
+        return clients.size() >= roomSize;
     }
 }

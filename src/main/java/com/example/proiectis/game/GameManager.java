@@ -1,18 +1,26 @@
 package com.example.proiectis.game;
 
+import com.example.proiectis.game.model.Board;
+import com.example.proiectis.websocket.BaseWebSocketListener;
+import com.example.proiectis.websocket.Broadcaster;
 import com.example.proiectis.websocket.Channel;
-import com.example.proiectis.websocket.handler.CustomWebSocketHandler;
-import com.example.proiectis.websocket.CustomWebSocketListener;
 import com.example.proiectis.websocket.Client;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
-public class GameManager implements CustomWebSocketListener {
+public class GameManager implements BaseWebSocketListener {
 
-    private final CustomWebSocketHandler customWebSocketHandler;
+    @Setter
+    private Broadcaster broadcaster;
+
+    @Autowired
+    private LobbyManager lobbyManager;
+
     private final Map<Channel, Board> activeGames = new HashMap<>();
 
     public final static String REQUEST_ROLL = "roll_request";
@@ -20,15 +28,12 @@ public class GameManager implements CustomWebSocketListener {
     public final static String REQUEST_REENTER = "reenter";
     public final static String REQUEST_REMOVE = "remove";
 
-    public GameManager(CustomWebSocketHandler customWebSocketHandler) {
-        this.customWebSocketHandler = customWebSocketHandler;
-        this.customWebSocketHandler.addListener(this);
-    }
+    public final static int MAX_ROOM_SIZE = 2;
 
     @Override
     public void onClientJoin(Client client) {
         try {
-            customWebSocketHandler.broadcast(client.getChannel(), Message.playerJoined(client.getId()));
+            broadcaster.broadcast(client.getChannel(), Message.playerJoined(client.getId()));
 
             // Cand un client nou se conecteaza, creeaza o noua sesiune de joc
             // asociata cu canalul corespunzator clientului daca aceasta nu exista
@@ -57,7 +62,7 @@ public class GameManager implements CustomWebSocketListener {
                     );
 
                     try {
-                        customWebSocketHandler.broadcast(client.getChannel(), Message.gameEnd(data));
+                        broadcaster.broadcast(client.getChannel(), Message.gameEnd(data));
                     } catch (Exception e) {
                         System.out.println(e.getMessage());
                     }
@@ -65,12 +70,12 @@ public class GameManager implements CustomWebSocketListener {
             }));
 
             // Incepe jocul daca ambii jucatori sau conectat
-            if (client.getChannel().isFull()) {
+            if (client.getChannel().isFull(MAX_ROOM_SIZE)) {
                 Board board = activeGames.get(client.getChannel());
-                int[] playerIds = getPlayerIdsFromChannel(client.getChannel());
+                long[] playerIds = getPlayerIdsFromChannel(client.getChannel());
                 // Primul player care a dat join va fi jucatorul alb
-                customWebSocketHandler.broadcast(client.getChannel(), Message.gameStart(playerIds[0], playerIds[1]));
-                customWebSocketHandler.broadcast(client.getChannel(), Message.state(board.serialize()));
+                broadcaster.broadcast(client.getChannel(), Message.gameStart(playerIds[0], playerIds[1]));
+                broadcaster.broadcast(client.getChannel(), Message.state(board.serialize()));
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -80,7 +85,9 @@ public class GameManager implements CustomWebSocketListener {
     @Override
     public void onClientLeave(Client client) {
         try {
-            customWebSocketHandler.broadcast(client.getChannel(), "Client left");
+            broadcaster.broadcast(client.getChannel(), Message.playerLeft(client.getId()));
+            activeGames.remove(client.getChannel());
+            lobbyManager.removeRoom(client.getChannel().getId());
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -96,10 +103,10 @@ public class GameManager implements CustomWebSocketListener {
         }
     }
 
-    private int[] getPlayerIdsFromChannel(Channel channel) {
+    private long[] getPlayerIdsFromChannel(Channel channel) {
         return channel.getClients()
                 .stream()
-                .mapToInt(Client::getId)
+                .mapToLong(Client::getId)
                 .toArray();
     }
 
@@ -134,36 +141,107 @@ public class GameManager implements CustomWebSocketListener {
 
     private void roll(Board board, Channel channel) throws Exception {
         board.rollDice();
-        customWebSocketHandler.broadcast(channel, Message.state(board.serialize()));
+        broadcaster.broadcast(channel, Message.state(board.serialize()));
     }
 
     private void reenter(Board board, Channel channel, int color, int position) throws Exception {
         if (!board.isValidReenter(color, position)) {
-            customWebSocketHandler.broadcast(channel, Message.invalidReenter("Invalid reenter"));
+            broadcaster.broadcast(channel, Message.invalidReenter("Invalid reenter"));
             return;
         }
 
         board.reenter(color, position);
-        customWebSocketHandler.broadcast(channel, Message.state(board.serialize()));
+        broadcaster.broadcast(channel, Message.state(board.serialize()));
     }
 
     private void move(Board board, Channel channel, int color, int src, int dst) throws Exception {
         if (!board.isValidMove(color, src, dst)) {
-            customWebSocketHandler.broadcast(channel, Message.invalidMove("Invalid move"));
+            broadcaster.broadcast(channel, Message.invalidMove("Invalid move"));
             return;
         }
 
         board.move(src, dst);
-        customWebSocketHandler.broadcast(channel, Message.state(board.serialize()));
+        broadcaster.broadcast(channel, Message.state(board.serialize()));
     }
 
     private void remove(Board board, Channel channel, int color, int position) throws Exception {
         if(!board.isValidRemove(color, position)) {
-            customWebSocketHandler.broadcast(channel, Message.invalidRemove("Invalid remove"));
+            broadcaster.broadcast(channel, Message.invalidRemove("Invalid remove"));
             return;
         }
 
         board.remove(color, position);
-        customWebSocketHandler.broadcast(channel, Message.state(board.serialize()));
+        broadcaster.broadcast(channel, Message.state(board.serialize()));
+    }
+
+    private static class Message {
+        public static Object playerJoined(Long playerId) {
+            return Map.of(
+                    "type", "player_joined",
+                    "payload", Map.of(
+                            "player", playerId
+                    )
+            );
+        }
+
+        public static Object playerLeft(Long playerId) {
+            return Map.of(
+                    "type", "player_left",
+                    "payload", Map.of(
+                            "player", playerId
+                    )
+            );
+        }
+
+        public static Object gameStart(Long whitePlayer, Long blackPlayer) {
+            return Map.of(
+                    "type", "game_start",
+                    "payload", Map.of(
+                            "white", whitePlayer,
+                            "black", blackPlayer
+                    )
+            );
+        }
+
+        public static Object gameEnd(Object payload) {
+            return Map.of(
+                    "type", "game_end",
+                    "payload", payload
+            );
+        }
+
+        public static Object invalidMove(String reason) {
+            return Map.of(
+                    "type", "invalid_move",
+                    "payload", Map.of(
+                            "reason", reason
+                    )
+            );
+        }
+
+        public static Object invalidReenter(String reason) {
+            return Map.of(
+                    "type", "invalid_reenter",
+                    "payload", Map.of(
+                            "reason", reason
+                    )
+            );
+        }
+
+        public static Object invalidRemove(String reason) {
+            return Map.of(
+                    "type", "invalid_remove",
+                    "payload", Map.of(
+                            "reason", reason
+                    )
+            );
+        }
+
+        public static Object state(Object boardState) {
+            return Map.of(
+                    "type", "state",
+                    "payload", boardState
+            );
+        }
     }
 }

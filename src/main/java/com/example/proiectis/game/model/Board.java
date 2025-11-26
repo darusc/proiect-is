@@ -1,4 +1,4 @@
-package com.example.proiectis.game;
+package com.example.proiectis.game.model;
 
 import org.springframework.data.util.Pair;
 

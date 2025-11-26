@@ -1,12 +1,10 @@
 package com.example.proiectis.game;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.util.Pair;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.IntStream;
 
 public class Board {
 
@@ -15,6 +13,14 @@ public class Board {
     public static int NONE = 0;
     public static int WHITE = 'W';
     public static int BLACK = 'B';
+
+    public interface GameListener {
+        /**
+         * @param winner Culoare jucatorului care a castigat
+         * @param points Numarul de puncte castigate
+         */
+        void onGameEnd(int winner, int points);
+    }
 
     // Tabla de joc e reprezentata de o matrice de
     // 24 de randuri x 2 coloane => fiecare rand reprezinta
@@ -57,9 +63,10 @@ public class Board {
     private final List<Integer> remainingMoves = new ArrayList<>();
 
     private final Random rand = new Random();
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final GameListener gameListener;
 
-    public Board() {
+    public Board(GameListener gameListener) {
+        this.gameListener = gameListener;
         reset();
     }
 
@@ -153,16 +160,16 @@ public class Board {
 
         // Verifica daca numarul zarului este mai mare decat ultimul spatiu
         // ocupat pentru a permite scoaterea piesei de pe ultimul spatiu
-        if(color == WHITE) {
-            for(int pos = position + 1; pos < 6; pos++) {
-                if(board[pos][0] == WHITE && board[pos][1] > 0) {
+        if (color == WHITE) {
+            for (int pos = position + 1; pos < 6; pos++) {
+                if (board[pos][0] == WHITE && board[pos][1] > 0) {
                     return false;
                 }
             }
             return remainingMoves.stream().anyMatch(m -> m > requiredMove);
         } else {
-            for(int pos = position - 1; pos >= 18; pos--) {
-                if(board[pos][0] == BLACK && board[pos][1] > 0) {
+            for (int pos = position - 1; pos >= 18; pos--) {
+                if (board[pos][0] == BLACK && board[pos][1] > 0) {
                     return false;
                 }
             }
@@ -255,6 +262,8 @@ public class Board {
         int requiredMove = (color == WHITE) ? position + 1 : 24 - position;
         int moveToUse = remainingMoves.stream().filter(m -> m >= requiredMove).min(Integer::compareTo).orElse(requiredMove);
         useRemainingMove(moveToUse);
+
+        checkIfGameEnded();
     }
 
     public int[] rollDice() {
@@ -325,6 +334,66 @@ public class Board {
             }
         }
         blackCanRemove = (count + blacksRemoved == 15);
+    }
+
+    private void checkIfGameEnded() {
+        Optional<Pair<Integer, Integer>> result =
+                Arrays.stream(new int[]{WHITE, BLACK})
+                        .mapToObj(color -> {
+                            if (checkTripleVictory(color)) return Pair.of(color, 3);
+                            if (checkDoubleVictory(color)) return Pair.of(color, 2);
+                            if (checkSimpleVictory(color)) return Pair.of(color, 1);
+                            return null;
+                        })
+                        .filter(Objects::nonNull)
+                        .findFirst();
+
+        int winner = result.map(Pair::getFirst).orElse(-1);
+        int points = result.map(Pair::getSecond).orElse(-1);
+
+        if (winner != -1 && points != -1) {
+            gameListener.onGameEnd(winner, points);
+        }
+    }
+
+    /**
+     * Verifica victoria tripla.
+     * Toate piesele scoase, oponentul nu a scos nicio piesa si are
+     * una capturata sau in casa castigatorului
+     */
+    private boolean checkTripleVictory(int color) {
+        int removed = color == WHITE ? whitesRemoved : blacksRemoved;
+        int opponentRemoved = color == WHITE ? blacksRemoved : whitesRemoved;
+
+        int taken = color == WHITE ? blacksTaken : whitesTaken;
+
+        int opponentColor = color == WHITE ? BLACK : WHITE;
+
+        int start = color == WHITE ? 0 : 19;
+        int end = color == BLACK ? 6 : 24;
+
+        boolean opponentInHome = IntStream.range(start, end)
+                .anyMatch(i -> board[i][0] == opponentColor && board[i][1] > 0);
+
+        return removed == 15 && opponentRemoved == 0 && (taken > 0 || opponentInHome);
+    }
+
+    /**
+     * Verifica victoria dubla.
+     * Toate piesele scoase, oponentul nu a scos nicio piesa
+     */
+    private boolean checkDoubleVictory(int color) {
+        int removed = color == WHITE ? whitesRemoved : blacksRemoved;
+        int opponentRemoved = color == WHITE ? blacksRemoved : whitesRemoved;
+
+        return removed == 15 && opponentRemoved == 0;
+    }
+
+    /**
+     * Victorie simpla, toate piesele scoase
+     */
+    private boolean checkSimpleVictory(int color) {
+        return color == WHITE ? whitesRemoved == 15 : blacksRemoved == 15;
     }
 
     private int distance(int src, int dst) {

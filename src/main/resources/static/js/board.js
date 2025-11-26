@@ -28,7 +28,8 @@ class Board {
             dice: this.#renderDice.bind(this),
             barPieces: this.#renderBarPieces.bind(this),
             highlightReentry: this.#highlightReentry.bind(this),
-            highlightRemove: this.#highlightRemove.bind(this)
+            highlightRemove: this.#highlightRemove.bind(this),
+            endGame: this.renderEndGameDialogue.bind(this)
         }
     }
 
@@ -196,6 +197,43 @@ class Board {
     #clearHighlight() {
         this.selectedTriangle = null;
         this.triangles.forEach(t => t.classList.remove('highlight', 'reentry', 'remove'));
+    }
+
+    renderEndGameDialogue(gameWon, p1, p2) {
+        const overlay = document.getElementById("endGameOverlay");
+        const box = document.getElementById("endGameBox");
+
+        document.getElementById("endGameTitle").textContent = gameWon ? "Ai câștigat!" : "Ai pierdut!";
+
+        // Nume / ID
+        document.getElementById("p1name").textContent = p1['username'];
+        document.getElementById("p2name").textContent = p2['username'];
+
+        // Scor runda
+        document.getElementById("p1round").textContent = p1['points'];
+        document.getElementById("p2round").textContent = p2['points'];
+
+        if (p1['points'] > p2['points']) {
+            document.getElementById("p1round").classList.add("score-win");
+            document.getElementById("p2round").classList.add("score-lose");
+        } else {
+            document.getElementById("p2round").classList.add("score-win");
+            document.getElementById("p1round").classList.add("score-lose");
+        }
+
+        document.getElementById("p1total").textContent = p1['total'];
+        document.getElementById("p2total").textContent = p2['total'];
+
+        overlay.classList.remove("hidden");
+
+        setTimeout(() => {
+            box.classList.remove("scale-75", "opacity-0");
+            box.classList.add("scale-100", "opacity-100");
+        }, 10);
+
+        document.getElementById("endGameOk").onclick = () => {
+            overlay.classList.add("hidden");
+        };
     }
 
     #renderBoard(board, turn) {

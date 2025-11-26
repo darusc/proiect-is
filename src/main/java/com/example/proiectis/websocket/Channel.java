@@ -4,13 +4,16 @@ import com.example.proiectis.websocket.handler.CustomWebSocketHandlerImpl;
 import lombok.Getter;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Getter
 public class Channel {
 
     private final String id;
-    private final Set<Client> clients = new HashSet<>();
+
+    // LinkedHashSet pentru a pastra ordinea clientilor
+    private final Set<Client> clients = new LinkedHashSet<>();
 
     public Channel(String id) {
         this.id = id;

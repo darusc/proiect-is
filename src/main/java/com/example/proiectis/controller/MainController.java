@@ -27,9 +27,13 @@ public class MainController {
     }
 
     @GetMapping("/{id}")
-    public String game(@PathVariable String id, Model model) {
+    public String game(
+            @PathVariable String id,
+            @RequestParam(name = "player") Long playerId,
+            Model model
+    ) {
         model.addAttribute("roomId", id);
-        model.addAttribute("playerId", Math.floor(Math.random() * 1000));
+        model.addAttribute("playerId", playerId);
         return "game";
     }
 }

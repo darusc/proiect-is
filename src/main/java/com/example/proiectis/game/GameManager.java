@@ -7,7 +7,6 @@ import com.example.proiectis.websocket.Client;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
 
-import java.io.Serializable;
 import java.util.*;
 
 @Service
@@ -33,17 +32,44 @@ public class GameManager implements CustomWebSocketListener {
 
             // Cand un client nou se conecteaza, creeaza o noua sesiune de joc
             // asociata cu canalul corespunzator clientului daca aceasta nu exista
-            activeGames.putIfAbsent(client.getChannel(), new Board());
+            activeGames.putIfAbsent(client.getChannel(), new Board(new Board.GameListener() {
+                @Override
+                public void onGameEnd(int winner, int points) {
+                    /// TO DO salveaza meciul in baza de date si actualizeaza
+                    /// clasamentul si scorul total dintre cei doi jucator
+                    /// Returneaza informatii suplimentare (ex. username)
+                    ///
+                    /// playerIds[0] -> jucatorul alb, playerIds[1] -> jucatorul negru
+                    /// int[] playerIds = getPlayerIdsFromChannel(client.getChannel());
 
-            // Start the game if the channel is full
+                    Map<String, Object> data = Map.of(
+                            "winner", winner,
+                            "white", Map.of(
+                                    "points", winner == Board.WHITE ? points : 0,
+                                    "username", "...",                       ///  provizoriu
+                                    "total", 0                                      ///  provizoriu
+                            ),
+                            "black", Map.of(
+                                    "points", winner == Board.BLACK ? points : 0,
+                                    "username", "...",                       ///  provizoriu
+                                    "total", 0                                      ///  provizoriu
+                            )
+                    );
+
+                    try {
+                        customWebSocketHandler.broadcast(client.getChannel(), Message.gameEnd(data));
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
+                }
+            }));
+
+            // Incepe jocul daca ambii jucatori sau conectat
             if (client.getChannel().isFull()) {
                 Board board = activeGames.get(client.getChannel());
-                Object[] playerIds = client.getChannel()
-                        .getClients()
-                        .stream()
-                        .map(Client::getId)
-                        .toArray();
-                customWebSocketHandler.broadcast(client.getChannel(), Message.gameStart((int) playerIds[0], (int) playerIds[1]));
+                int[] playerIds = getPlayerIdsFromChannel(client.getChannel());
+                // Primul player care a dat join va fi jucatorul alb
+                customWebSocketHandler.broadcast(client.getChannel(), Message.gameStart(playerIds[0], playerIds[1]));
                 customWebSocketHandler.broadcast(client.getChannel(), Message.state(board.serialize()));
             }
         } catch (Exception e) {
@@ -68,6 +94,13 @@ public class GameManager implements CustomWebSocketListener {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    private int[] getPlayerIdsFromChannel(Channel channel) {
+        return channel.getClients()
+                .stream()
+                .mapToInt(Client::getId)
+                .toArray();
     }
 
     private void process(Channel channel, JsonNode message) throws Exception {

@@ -34,7 +34,11 @@ public class Room {
     }
 
     public boolean join(Long playerId, String password) {
-        if (players.contains(playerId) || !this.password.equals(password) || players.size() > GameManager.MAX_ROOM_SIZE) {
+        if (players.contains(playerId) || players.size() > GameManager.MAX_ROOM_SIZE) {
+            return false;
+        }
+
+        if(this.password != null && !this.password.equals(password)) {
             return false;
         }
 
@@ -62,7 +66,8 @@ public class Room {
     public Object toJson() {
         return Map.of(
                 "id", id,
-                "name", name
+                "name", name,
+                "private", password != null && !password.isEmpty() && !password.isBlank()
         );
     }
 }

@@ -18,7 +18,7 @@ class Game {
         this.color = null;
         this.state = null;
 
-        this.ws = new Ws(playerId, roomId, msg => this.#onMessage(msg));
+        this.ws = new Ws(playerId, roomId, 'ws://localhost:8080/ws/game', msg => this.#onMessage(msg));
     }
 
     #onMessage(event) {

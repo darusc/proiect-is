@@ -18,8 +18,7 @@ public class GameManager implements BaseWebSocketListener {
     @Setter
     private Broadcaster broadcaster;
 
-    @Autowired
-    private LobbyManager lobbyManager;
+    private final LobbyManager lobbyManager;
 
     private final Map<Channel, Board> activeGames = new HashMap<>();
 
@@ -29,6 +28,10 @@ public class GameManager implements BaseWebSocketListener {
     public final static String REQUEST_REMOVE = "remove";
 
     public final static int MAX_ROOM_SIZE = 2;
+
+    public GameManager(LobbyManager lobbyManager) {
+        this.lobbyManager = lobbyManager;
+    }
 
     @Override
     public void onClientJoin(Client client) {

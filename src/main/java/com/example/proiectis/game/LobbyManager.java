@@ -28,10 +28,7 @@ public class LobbyManager implements BaseWebSocketListener {
     @Override
     public void onClientJoin(Client client) {
         try {
-            broadcaster.broadcast(client, Map.of(
-                    "type", "rooms",
-                    "rooms", getAvailableRooms()
-            ));
+            broadcaster.broadcast(client, Message.rooms(getAvailableRooms()));
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -66,25 +63,32 @@ public class LobbyManager implements BaseWebSocketListener {
 
         switch (type) {
             case REQUEST_CREATE_ROOM:
-                createRoom(client.getId(), client.getId().toString(), payload.get("password").asText());
-                broadcaster.broadcast(client, Map.of("type", RESPONSE_ROOM_CREATED));
-                broadcaster.broadcast(client.getChannel(), Map.of("type", "rooms", "rooms", getAvailableRooms()));
+                String password = payload.get("password").isNull() ? null : payload.get("password").asText();
+                Room room = createRoom(client.getId(), client.getId().toString(), password);
+
+                broadcaster.broadcast(client, Message.roomCreated(room.getId()));
+                broadcaster.broadcast(client.getChannel(), Message.rooms(getAvailableRooms()));
                 break;
 
             case REQUEST_JOIN_ROOM:
-                boolean joined = joinRoom(client.getId(), payload.get("roomId").asText(), payload.get("password").asText());
-                broadcaster.broadcast(client, Map.of("type", joined ? RESPONSE_JOIN_SUCCESS : RESPONSE_JOIN_FAILED));
-                broadcaster.broadcast(client.getChannel(), Map.of("type", "rooms", "rooms", getAvailableRooms()));
+                String roomId = payload.get("roomId").asText();
+                String password_ = payload.get("password").isNull() ? null : payload.get("password").asText();
+                boolean joined = joinRoom(client.getId(), roomId, password_);
+
+                broadcaster.broadcast(client, joined ? Message.joinSuccess(roomId) : Message.joinFailed(roomId));
+                broadcaster.broadcast(client.getChannel(), Message.rooms(getAvailableRooms()));
                 break;
 
         }
     }
 
-    private void createRoom(Long owner, String name, String password) {
+    private Room createRoom(Long owner, String name, String password) {
         String newId = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         Room room = new Room(newId, name, password);
         rooms.add(room);
         room.join(owner, password);
+
+        return room;
     }
 
     private boolean joinRoom(Long player, String roomId, String password) {
@@ -108,5 +112,42 @@ public class LobbyManager implements BaseWebSocketListener {
             return false;
         }
         return rooms.stream().anyMatch(r -> r.getId().equals(roomId) && r.hasPlayer(playerId));
+    }
+
+    private static class Message {
+
+        public static Object rooms(Object rooms) {
+            return Map.of(
+                    "type", "rooms",
+                    "payload", Map.of(
+                            "rooms", rooms
+                    )
+            );
+        }
+
+        public static Object roomCreated(String roomId) {
+            return Map.of(
+                    "type", "room_created",
+                    "payload", Map.of(
+                            "roomId", roomId
+                    )
+            );
+        }
+
+        public static Object joinSuccess(String roomId) {
+            return Map.of(
+                    "type", "room_join_success",
+                    "payload", Map.of(
+                            "roomId", roomId
+                    )
+            );
+        }
+
+        public static Object joinFailed(String roomId) {
+            return Map.of(
+                    "type", "room_join_failed",
+                    "payload", Map.of()
+            );
+        }
     }
 }

@@ -1,0 +1,197 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.lobby {
+    box-shadow: inset 0 0 1rem 0 #000;
+    background-color: #232323;
+    width: 100vw;
+    height: 100vh;
+}
+
+.rooms {
+    max-width: 60em;
+    margin: auto;
+}
+
+.room {
+    padding: .5em;
+    margin: .2em;
+    min-width: 12em;
+    border-radius: .5em;
+    color: #ccc;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+    box-sizing: border-box;
+    border-left: .5em solid #f39c12;
+    background: linear-gradient(0deg, #222, #333);
+    box-shadow: 0 .2em .5em 0 #000, inset 0 .2em .4em 0 rgba(255, 255, 255, .1);
+}
+
+
+.room i {
+    float: right;
+    margin-left: .25em;
+    width: 1em;
+    height: 1em;
+}
+
+.room .name {
+    padding-right: .5em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 13em;
+    font-weight: 700;
+    font-size: 1.25em;
+    color: #ccc;
+}
+
+.room .users {
+    overflow: hidden;
+    white-space: nowrap;
+    margin-top: .3em;
+    line-height: 1em;
+    color: #ccc;
+}
+
+u.user {
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+    overflow: hidden;
+    color: #555;
+    font-size: 1.25em;
+}
+
+u.user[data-active=true] {
+    color: #aaa;
+}
+
+svg {
+    display: block;
+    height: auto;
+    max-height: 100%;
+    width: 100%;
+    pointer-events: none;
+    fill: currentColor;
+    stroke: currentColor;
+    stroke-width: 0;
+}
+
+.top-bar {
+    width: 100%;
+    padding: 1em 0;
+    display: flex;
+    justify-content: center;
+}
+
+.create-btn {
+    font-family: Arial, Helvetica, sans-serif;
+    cursor: pointer;
+    background-color: #004893;
+    display: inline-block;
+    vertical-align: middle;
+    padding: .75em;
+    border-radius: 2em;
+    box-sizing: border-box;
+    color: #fff;
+    border: .3em solid rgba(0, 0, 0, .2);
+    box-shadow: 0 .2em .5em .1em #000;
+}
+
+.create-btn:hover {
+    background: #3a3a3a;
+}
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+.modal {
+    width: 16em;
+    max-width: 100%;
+    margin: auto;
+    position: relative;
+    overflow: visible;
+    box-shadow: 0 0 1em 0 #111;
+    background: #000;
+    color: #ccc;
+    display: block;
+    z-index: 100;
+    box-sizing: border-box;
+    border-radius: 1em;
+    font-size: 1.25em;
+    border: 2px solid #333;
+    padding-bottom: 2.5em;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.modal h3 {
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+    color: white;
+}
+
+.modal input {
+    font-family: monospace;
+    text-align: center;
+    border-radius: 1em;
+    margin: 0 1em;
+    padding: .4em;
+    border: 1px dashed #888;
+    background: #222;
+    max-width: calc(100% - .5em);
+    box-sizing: border-box;
+    color: #ccc;
+}
+
+.modal button {
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1em;
+    color: #fff;
+    text-align: center;
+    padding: 1em;
+    background-color: #000;
+    background-size: 1em auto;
+    vertical-align: middle;
+    height: 3em;
+    width: 3em;
+    border-radius: 3em;
+    box-sizing: border-box;
+    box-shadow: 0 0 0 .25em #000;
+    position: absolute;
+    bottom: -1.5em;
+    text-align: center;
+    display: flex;
+    align-items: center;
+}
+
+.modal button.confirm {
+    right: 0;
+    background-color: #27ae60;
+}
+
+.modal button.cancel {
+    background-color: #c0392b;
+}
+
+.modal button:hover {
+    color: black;
+}

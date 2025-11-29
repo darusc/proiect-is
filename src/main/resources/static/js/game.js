@@ -3,6 +3,7 @@ class Game {
     static START = "game_start";
     static STATE = "state";
     static END = "game_end";
+    static TIMER = "timer";
 
     static WHITE = 87
     static BLACK = 66
@@ -17,6 +18,7 @@ class Game {
         this.renderer = renderer;
         this.color = null;
         this.state = null;
+        this.ended = false;
 
         this.ws = new Ws(playerId, roomId, 'ws://localhost:8080/ws/game', msg => this.#onMessage(msg));
     }
@@ -24,6 +26,10 @@ class Game {
     #onMessage(event) {
         const data = JSON.parse(event.data);
         console.log("WS:", data);
+
+        if(this.ended) {
+            return;
+        }
 
         switch (data.type) {
 
@@ -38,6 +44,12 @@ class Game {
 
             case Game.END:
                 this.renderGameEndDialogue(data['payload']);
+                this.renderer.timerStop();
+                this.ended = true;
+                break;
+
+            case Game.TIMER:
+                this.renderer.timer(data['payload']['whiteTime'], data['payload']['blackTime'], data['payload']['turn']);
                 break;
 
             case "ERROR":

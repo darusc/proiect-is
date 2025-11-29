@@ -19,7 +19,6 @@ public class GameManager implements BaseWebSocketListener {
     private Broadcaster broadcaster;
 
     private final LobbyManager lobbyManager;
-
     private final Map<Channel, Board> activeGames = new HashMap<>();
 
     public final static String REQUEST_ROLL = "roll_request";
@@ -29,8 +28,13 @@ public class GameManager implements BaseWebSocketListener {
 
     public final static int MAX_ROOM_SIZE = 2;
 
-    public GameManager(LobbyManager lobbyManager) {
+    public GameManager(LobbyManager lobbyManager, Timer timer) {
         this.lobbyManager = lobbyManager;
+        timer.subscribe(() -> {
+            for (Board board : activeGames.values()) {
+                board.tick();
+            }
+        });
     }
 
     @Override
@@ -70,6 +74,15 @@ public class GameManager implements BaseWebSocketListener {
                         System.out.println(e.getMessage());
                     }
                 }
+
+                @Override
+                public void onTimerUpdate(int currentTurn, long whiteTime, long blackTime) {
+                    try {
+                        broadcaster.broadcast(client.getChannel(), Message.timer(currentTurn, whiteTime, blackTime));
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
+                }
             }));
 
             // Incepe jocul daca ambii jucatori sau conectat
@@ -78,7 +91,9 @@ public class GameManager implements BaseWebSocketListener {
                 long[] playerIds = getPlayerIdsFromChannel(client.getChannel());
                 // Primul player care a dat join va fi jucatorul alb
                 broadcaster.broadcast(client.getChannel(), Message.gameStart(playerIds[0], playerIds[1]));
+                broadcaster.broadcast(client.getChannel(), Message.timer(board.getCurrentTurn(), board.getWhiteTime(), board.getBlackTime()));
                 broadcaster.broadcast(client.getChannel(), Message.state(board.serialize()));
+                board.start();
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -236,6 +251,17 @@ public class GameManager implements BaseWebSocketListener {
                     "type", "invalid_remove",
                     "payload", Map.of(
                             "reason", reason
+                    )
+            );
+        }
+
+        public static Object timer(int turn, long whiteTime, long blackTime) {
+            return Map.of(
+                    "type", "timer",
+                    "payload", Map.of(
+                            "turn", turn,
+                            "whiteTime", whiteTime,
+                            "blackTime", blackTime
                     )
             );
         }

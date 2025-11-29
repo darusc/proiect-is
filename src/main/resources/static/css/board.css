@@ -14,7 +14,7 @@ body {
     gap: 2px;
 }
 
-.board.flip {
+.flip {
     transform: rotate(180deg);
 }
 
@@ -290,4 +290,17 @@ body {
 .score-lose {
     color: #ff3a3a;
     font-weight: 700;
+}
+
+.timer {
+    text-align: center;
+    color: white;
+    opacity: 0.7;
+    font-family: "Seven Segment", sans-serif;
+    text-shadow: 0 0 10px #ff3333;
+    font-size: 2em;
+}
+
+.timer.active {
+    opacity: 1;
 }

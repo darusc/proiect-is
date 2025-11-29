@@ -4,6 +4,8 @@ class Board {
     onReentry = () => {};
     onRemove = () => {};
 
+    timerInterval = null;
+
     /**
      * Functie folosita pentru a obtine date necesare pentru highlight
      * Trebuie sa returneze un array de forma [remainingMoves, currentTurn, color]
@@ -29,7 +31,9 @@ class Board {
             barPieces: this.#renderBarPieces.bind(this),
             highlightReentry: this.#highlightReentry.bind(this),
             highlightRemove: this.#highlightRemove.bind(this),
-            endGame: this.renderEndGameDialogue.bind(this)
+            endGame: this.renderEndGameDialogue.bind(this),
+            timer:this.#renderTimer.bind(this),
+            timerStop: () => clearInterval(this.timerInterval)
         }
     }
 
@@ -255,6 +259,7 @@ class Board {
 
         if (turn === Game.BLACK) {
             document.querySelector('.board').classList.add('flip');
+            document.querySelectorAll('.timer').forEach(e => e.classList.add('flip'));
         }
     }
 
@@ -346,5 +351,38 @@ class Board {
             captured.classList.add('captured-piece', 'w');
             boxW.appendChild(captured);
         }
+    }
+
+    #renderTimer(whiteTime, blackTime, turn) {
+        const timerW = document.querySelector('.timer.w');
+        const timerB = document.querySelector('.timer.b');
+
+        if(this.timerInterval != null) {
+            clearInterval(this.timerInterval);
+        }
+
+        if(turn === Game.WHITE) {
+            timerW.classList.add('active');
+            timerB.classList.remove('active');
+        } else {
+            timerW.classList.remove('active');
+            timerB.classList.add('active');
+        }
+
+        let remainingTime = turn === Game.WHITE ? whiteTime : blackTime;
+        this.timerInterval = setInterval(() => {
+            remainingTime--;
+            if(turn === Game.WHITE) {
+                timerW.innerText = this.#formatTime(remainingTime);
+            } else {
+                timerB.innerText = this.#formatTime(remainingTime);
+            }
+        }, 1000);
+    }
+
+    #formatTime(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}:${s.toString().padStart(2, '0')}`;
     }
 }

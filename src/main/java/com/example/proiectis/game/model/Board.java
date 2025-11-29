@@ -1,14 +1,21 @@
 package com.example.proiectis.game.model;
 
+import lombok.Getter;
 import org.springframework.data.util.Pair;
-
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.IntStream;
 
 public class Board {
 
+    public enum Status {
+        WAITING,
+        STARTED,
+        ENDED
+    }
+
     public static int SIZE = 24;
+    public static int MAX_TIME = 60;
 
     public static int NONE = 0;
     public static int WHITE = 'W';
@@ -20,6 +27,13 @@ public class Board {
          * @param points Numarul de puncte castigate
          */
         void onGameEnd(int winner, int points);
+
+        /**
+         * @param currentTurn Jucatorul curent
+         * @param whiteTime Timpul ramas al jucatorului alb
+         * @param blackTime Timpul ramas al jucatorului negru
+         */
+        void onTimerUpdate(int currentTurn, long whiteTime, long blackTime);
     }
 
     // Tabla de joc e reprezentata de o matrice de
@@ -56,6 +70,12 @@ public class Board {
     private boolean whiteCanRemove;
     private boolean blackCanRemove;
 
+    @Getter
+    private long whiteTime;
+    @Getter
+    private long blackTime;
+
+    @Getter
     private int currentTurn;
     private int nextTurn;
 
@@ -65,9 +85,40 @@ public class Board {
     private final Random rand = new Random();
     private final GameListener gameListener;
 
+    private Status status = Status.WAITING;
+
     public Board(GameListener gameListener) {
         this.gameListener = gameListener;
         reset();
+    }
+
+    public void start() {
+        status = Status.STARTED;
+    }
+
+    public void end(int winner, int points) {
+        gameListener.onGameEnd(winner, points);
+        status = Status.ENDED;
+    }
+
+    public void tick() {
+        if(status != Status.STARTED) {
+            return;
+        }
+
+        if(currentTurn == WHITE) {
+            whiteTime--;
+            if(whiteTime < 0) {
+                whiteTime = 0;
+                this.end(BLACK, 3);
+            }
+        } else {
+            blackTime--;
+            if(blackTime < 0) {
+                blackTime = 0;
+                this.end(WHITE, 3);
+            }
+        }
     }
 
     public Map<String, Serializable> serialize() {
@@ -293,6 +344,7 @@ public class Board {
         dice[0] = dice[1] = 0;
         whitesTaken = blacksTaken = 0;
         whitesRemoved = blacksRemoved = 0;
+        whiteTime = blackTime = MAX_TIME;
         currentTurn = WHITE;
         nextTurn = BLACK;
     }
@@ -352,7 +404,7 @@ public class Board {
         int points = result.map(Pair::getSecond).orElse(-1);
 
         if (winner != -1 && points != -1) {
-            gameListener.onGameEnd(winner, points);
+            this.end(winner, points);
         }
     }
 
@@ -413,6 +465,8 @@ public class Board {
         remainingMoves.clear();
 
         checkIfAllPiecesInHome();
+
+        gameListener.onTimerUpdate(currentTurn, whiteTime, blackTime);
     }
 
     private boolean canReenter(int color) {

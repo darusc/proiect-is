@@ -237,6 +237,7 @@ class Board {
 
         document.getElementById("endGameOk").onclick = () => {
             overlay.classList.add("hidden");
+            window.location.replace(`/?player=${playerId}`);
         };
     }
 

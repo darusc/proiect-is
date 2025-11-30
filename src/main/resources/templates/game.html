@@ -200,14 +200,14 @@
         </div>
     </div>
 
-    <script src="/js/ws.js"></script>
-    <script src="/js/game.js"></script>
-    <script src="/js/board.js"></script>
-
     <script th:inline="javascript">
         const playerId = /*[[${playerId}]]*/ 0;
         const roomId = /*[[${roomId}]]*/ "";
     </script>
+
+    <script src="/js/ws.js"></script>
+    <script src="/js/game.js"></script>
+    <script src="/js/board.js"></script>
 
     <script>
         const board = new Board();
@@ -223,10 +223,6 @@
                 game.requestRoll();
             }
         });
-
-        document.getElementById("closeEndGame").onclick = () => {
-            document.getElementById("endGamePopup").classList.add("hidden");
-        };
     </script>
 </body>
 </html>

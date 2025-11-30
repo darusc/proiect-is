@@ -70,6 +70,8 @@ public class GameManager implements BaseWebSocketListener {
 
                     try {
                         broadcaster.broadcast(client.getChannel(), Message.gameEnd(data));
+                        activeGames.remove(client.getChannel());
+                        lobbyManager.removeRoom(client.getChannel().getId());
                     } catch (Exception e) {
                         System.out.println(e.getMessage());
                     }

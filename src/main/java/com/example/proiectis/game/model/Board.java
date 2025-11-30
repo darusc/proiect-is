@@ -15,7 +15,7 @@ public class Board {
     }
 
     public static int SIZE = 24;
-    public static int MAX_TIME = 60;
+    public static int MAX_TIME = 30;
 
     public static int NONE = 0;
     public static int WHITE = 'W';

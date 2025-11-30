@@ -297,6 +297,8 @@ class Board {
         const dice1 = containers[0].querySelector(`.dice-${dice[0]}`);
         const dice2 = containers[1].querySelector(`.dice-${dice[1]}`);
 
+        console.log(dice1, dice2);
+
         dice1.classList.add('visible');
         dice2.classList.add('visible');
 

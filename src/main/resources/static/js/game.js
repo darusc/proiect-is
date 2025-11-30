@@ -35,6 +35,7 @@ class Game {
 
             case Game.START:
                 this.color = data['payload']['white'] === this.playerId ? Game.WHITE : Game.BLACK
+                this.renderer.timer(data['payload']['startTime'], data['payload']['startTime'], Game.WHITE);
                 break;
 
             case Game.STATE:

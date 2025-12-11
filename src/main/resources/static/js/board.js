@@ -4,6 +4,8 @@ class Board {
     onReentry = () => {};
     onRemove = () => {};
 
+    timerInterval = null;
+
     /**
      * Functie folosita pentru a obtine date necesare pentru highlight
      * Trebuie sa returneze un array de forma [remainingMoves, currentTurn, color]
@@ -28,7 +30,10 @@ class Board {
             dice: this.#renderDice.bind(this),
             barPieces: this.#renderBarPieces.bind(this),
             highlightReentry: this.#highlightReentry.bind(this),
-            highlightRemove: this.#highlightRemove.bind(this)
+            highlightRemove: this.#highlightRemove.bind(this),
+            endGame: this.renderEndGameDialogue.bind(this),
+            timer:this.#renderTimer.bind(this),
+            timerStop: () => clearInterval(this.timerInterval)
         }
     }
 
@@ -198,6 +203,44 @@ class Board {
         this.triangles.forEach(t => t.classList.remove('highlight', 'reentry', 'remove'));
     }
 
+    renderEndGameDialogue(gameWon, p1, p2) {
+        const overlay = document.getElementById("endGameOverlay");
+        const box = document.getElementById("endGameBox");
+
+        document.getElementById("endGameTitle").textContent = gameWon ? "Ai câștigat!" : "Ai pierdut!";
+
+        // Nume / ID
+        document.getElementById("p1name").textContent = p1['username'];
+        document.getElementById("p2name").textContent = p2['username'];
+
+        // Scor runda
+        document.getElementById("p1round").textContent = p1['points'];
+        document.getElementById("p2round").textContent = p2['points'];
+
+        if (p1['points'] > p2['points']) {
+            document.getElementById("p1round").classList.add("score-win");
+            document.getElementById("p2round").classList.add("score-lose");
+        } else {
+            document.getElementById("p2round").classList.add("score-win");
+            document.getElementById("p1round").classList.add("score-lose");
+        }
+
+        document.getElementById("p1total").textContent = p1['total'];
+        document.getElementById("p2total").textContent = p2['total'];
+
+        overlay.classList.remove("hidden");
+
+        setTimeout(() => {
+            box.classList.remove("scale-75", "opacity-0");
+            box.classList.add("scale-100", "opacity-100");
+        }, 10);
+
+        document.getElementById("endGameOk").onclick = () => {
+            overlay.classList.add("hidden");
+            window.location.replace(`/?player=${playerId}`);
+        };
+    }
+
     #renderBoard(board, turn) {
         this.triangles.forEach(t => t.innerHTML = "");
         for (let i = 0; i < board.length; i++) {
@@ -217,6 +260,7 @@ class Board {
 
         if (turn === Game.BLACK) {
             document.querySelector('.board').classList.add('flip');
+            document.querySelectorAll('.timer').forEach(e => e.classList.add('flip'));
         }
     }
 
@@ -252,6 +296,8 @@ class Board {
 
         const dice1 = containers[0].querySelector(`.dice-${dice[0]}`);
         const dice2 = containers[1].querySelector(`.dice-${dice[1]}`);
+
+        console.log(dice1, dice2);
 
         dice1.classList.add('visible');
         dice2.classList.add('visible');
@@ -308,5 +354,38 @@ class Board {
             captured.classList.add('captured-piece', 'w');
             boxW.appendChild(captured);
         }
+    }
+
+    #renderTimer(whiteTime, blackTime, turn) {
+        const timerW = document.querySelector('.timer.w');
+        const timerB = document.querySelector('.timer.b');
+
+        if(this.timerInterval != null) {
+            clearInterval(this.timerInterval);
+        }
+
+        if(turn === Game.WHITE) {
+            timerW.classList.add('active');
+            timerB.classList.remove('active');
+        } else {
+            timerW.classList.remove('active');
+            timerB.classList.add('active');
+        }
+
+        let remainingTime = turn === Game.WHITE ? whiteTime : blackTime;
+        this.timerInterval = setInterval(() => {
+            remainingTime--;
+            if(turn === Game.WHITE) {
+                timerW.innerText = this.#formatTime(remainingTime);
+            } else {
+                timerB.innerText = this.#formatTime(remainingTime);
+            }
+        }, 1000);
+    }
+
+    #formatTime(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}:${s.toString().padStart(2, '0')}`;
     }
 }

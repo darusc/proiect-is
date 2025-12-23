@@ -41,78 +41,70 @@ public class GameManager implements BaseWebSocketListener {
 
     @Override
     public void onClientJoin(Client client) {
-        try {
-            broadcaster.broadcast(client.getChannel(), new GameResponse.PlayerJoined(client.getId()));
+        broadcaster.broadcast(client.getChannel(), new GameResponse.PlayerJoined(client.getId()));
 
-            // Cand un client nou se conecteaza, creeaza o noua sesiune de joc
-            // asociata cu canalul corespunzator clientului daca aceasta nu exista
-            activeGames.putIfAbsent(client.getChannel(), new Game(new Game.EventListener() {
-                @Override
-                public void onGameEnd(int winner, int points) {
-                    /// TO DO salveaza meciul in baza de date si actualizeaza
-                    /// clasamentul si scorul total dintre cei doi jucator
-                    /// Returneaza informatii suplimentare (ex. username)
-                    ///
-                    /// playerIds[0] -> jucatorul alb, playerIds[1] -> jucatorul negru
-                    /// int[] playerIds = getPlayerIdsFromChannel(client.getChannel());
+        // Cand un client nou se conecteaza, creeaza o noua sesiune de joc
+        // asociata cu canalul corespunzator clientului daca aceasta nu exista
+        activeGames.putIfAbsent(client.getChannel(), new Game(new Game.EventListener() {
+            @Override
+            public void onGameEnd(int winner, int points) {
+                /// TO DO salveaza meciul in baza de date si actualizeaza
+                /// clasamentul si scorul total dintre cei doi jucator
+                /// Returneaza informatii suplimentare (ex. username)
+                ///
+                /// playerIds[0] -> jucatorul alb, playerIds[1] -> jucatorul negru
+                /// int[] playerIds = getPlayerIdsFromChannel(client.getChannel());
 
-                    Map<String, Object> data = Map.of(
-                            "winner", winner,
-                            "white", Map.of(
-                                    "points", winner == Board.Color.WHITE ? points : 0,
-                                    "username", "...",                       ///  provizoriu
-                                    "total", 0                                      ///  provizoriu
-                            ),
-                            "black", Map.of(
-                                    "points", winner == Board.Color.BLACK ? points : 0,
-                                    "username", "...",                       ///  provizoriu
-                                    "total", 0                                      ///  provizoriu
-                            )
-                    );
+                Map<String, Object> data = Map.of(
+                        "winner", winner,
+                        "white", Map.of(
+                                "points", winner == Board.Color.WHITE ? points : 0,
+                                "username", "...",                       ///  provizoriu
+                                "total", 0                                      ///  provizoriu
+                        ),
+                        "black", Map.of(
+                                "points", winner == Board.Color.BLACK ? points : 0,
+                                "username", "...",                       ///  provizoriu
+                                "total", 0                                      ///  provizoriu
+                        )
+                );
 
-                    try {
-                        broadcaster.broadcast(client.getChannel(), new GameResponse.GameEnd(data));
-                        activeGames.remove(client.getChannel());
-                        lobbyManager.removeRoom(client.getChannel().getId());
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
+                try {
+                    broadcaster.broadcast(client.getChannel(), new GameResponse.GameEnd(data));
+                    activeGames.remove(client.getChannel());
+                    lobbyManager.removeRoom(client.getChannel().getId());
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
                 }
-
-                @Override
-                public void onTimerUpdate(int currentTurn, long whiteTime, long blackTime) {
-                    try {
-                        broadcaster.broadcast(client.getChannel(), new GameResponse.Timer(currentTurn, whiteTime, blackTime));
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                }
-            }));
-
-            // Incepe jocul daca ambii jucatori sau conectat
-            if (client.getChannel().isFull(MAX_ROOM_SIZE)) {
-                Game game = activeGames.get(client.getChannel());
-                long[] playerIds = getPlayerIdsFromChannel(client.getChannel());
-                // Primul player care a dat join va fi jucatorul alb
-                broadcaster.broadcast(client.getChannel(), new GameResponse.GameStart(playerIds[0], playerIds[1]));
-                //broadcaster.broadcast(client.getChannel(), new GameResponse.Timer(board.getCurrentTurn(), board.getWhiteTime(), board.getBlackTime()));
-                broadcaster.broadcast(client.getChannel(), new GameResponse.State(game.serialize()));
-                game.start();
             }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+
+            @Override
+            public void onTimerUpdate(int currentTurn, long whiteTime, long blackTime) {
+                try {
+                    broadcaster.broadcast(client.getChannel(), new GameResponse.Timer(currentTurn, whiteTime, blackTime));
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+        }));
+
+        // Incepe jocul daca ambii jucatori sau conectat
+        if (client.getChannel().isFull(MAX_ROOM_SIZE)) {
+            Game game = activeGames.get(client.getChannel());
+            long[] playerIds = getPlayerIdsFromChannel(client.getChannel());
+            // Primul player care a dat join va fi jucatorul alb
+            broadcaster.broadcast(client.getChannel(), new GameResponse.GameStart(playerIds[0], playerIds[1]));
+            //broadcaster.broadcast(client.getChannel(), new GameResponse.Timer(board.getCurrentTurn(), board.getWhiteTime(), board.getBlackTime()));
+            broadcaster.broadcast(client.getChannel(), new GameResponse.State(game.serialize()));
+            game.start();
         }
     }
 
     @Override
     public void onClientLeave(Client client) {
-        try {
-            broadcaster.broadcast(client.getChannel(), new GameResponse.PlayerLeft(client.getId()));
-            activeGames.remove(client.getChannel());
-            lobbyManager.removeRoom(client.getChannel().getId());
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+        broadcaster.broadcast(client.getChannel(), new GameResponse.PlayerLeft(client.getId()));
+        activeGames.remove(client.getChannel());
+        lobbyManager.removeRoom(client.getChannel().getId());
     }
 
     @Override
@@ -161,11 +153,7 @@ public class GameManager implements BaseWebSocketListener {
 
         } catch (GameException e) {
             // Trateaza exceptiile de joc. Transmite eroarea clientului care a initiat mesajul
-            try {
-                broadcaster.broadcast(client, e.serialize());
-            } catch (Exception ex) {
-                System.err.println(ex.getMessage());
-            }
+            broadcaster.broadcast(client, e.serialize());
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }

@@ -10,6 +10,7 @@ import com.example.proiectis.websocket.Channel;
 import com.example.proiectis.websocket.Client;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Setter;
+import org.antlr.v4.runtime.misc.Triple;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -94,7 +95,8 @@ public class GameManager implements BaseWebSocketListener {
             long[] playerIds = getPlayerIdsFromChannel(client.getChannel());
             // Primul player care a dat join va fi jucatorul alb
             broadcaster.broadcast(client.getChannel(), new GameResponse.GameStart(playerIds[0], playerIds[1]));
-            //broadcaster.broadcast(client.getChannel(), new GameResponse.Timer(board.getCurrentTurn(), board.getWhiteTime(), board.getBlackTime()));
+            // Sincronizeaza timpul (in special la reconectare)
+            broadcaster.broadcast(client.getChannel(), new GameResponse.Timer(game.getTimerData()));
             broadcaster.broadcast(client.getChannel(), new GameResponse.State(game.serialize()));
             game.start();
         }
@@ -103,8 +105,11 @@ public class GameManager implements BaseWebSocketListener {
     @Override
     public void onClientLeave(Client client) {
         broadcaster.broadcast(client.getChannel(), new GameResponse.PlayerLeft(client.getId()));
-        activeGames.remove(client.getChannel());
-        lobbyManager.removeRoom(client.getChannel().getId());
+        // Opreste jocul (sterge) daca ambii jucatori s-au deconectat
+        if(client.getChannel().isEmpty()) {
+            activeGames.remove(client.getChannel());
+            lobbyManager.removeRoom(client.getChannel().getId());
+        }
     }
 
     @Override
@@ -204,6 +209,10 @@ public class GameManager implements BaseWebSocketListener {
 
             public Timer(int turn, long whiteTime, long blackTime) {
                 super("timer", new TimerPayload(turn, whiteTime, blackTime));
+            }
+
+            public Timer(Game.TimerData data) {
+                super("timer", new TimerPayload(data.a, data.b, data.c));
             }
         }
 

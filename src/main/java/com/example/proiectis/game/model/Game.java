@@ -6,6 +6,7 @@ import com.example.proiectis.game.logic.LegalMovesResolver;
 import com.example.proiectis.game.logic.VictoryChecker;
 import com.example.proiectis.game.logic.MoveExecutor;
 import com.example.proiectis.game.logic.MoveValidator;
+import org.antlr.v4.runtime.misc.Triple;
 
 import java.util.*;
 
@@ -39,6 +40,12 @@ public class Game {
          * @param blackTime   Timpul ramas al jucatorului negru
          */
         void onTimerUpdate(int currentTurn, long whiteTime, long blackTime);
+    }
+
+    public static class TimerData extends Triple<Integer, Long, Long> {
+        public TimerData(Integer integer, Long aLong, Long aLong2) {
+            super(integer, aLong, aLong2);
+        }
     }
 
     private final Board board;
@@ -189,5 +196,9 @@ public class Game {
             }
         }
         state.blackCanRemove = (count + state.blacksRemoved == 15);
+    }
+
+    public TimerData getTimerData() {
+        return new TimerData(state.currentTurn, state.whiteTime, state.blackTime);
     }
 }

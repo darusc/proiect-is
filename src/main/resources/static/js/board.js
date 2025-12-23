@@ -372,6 +372,10 @@ class Board {
             timerB.classList.add('active');
         }
 
+        // Timer initial sincronizat cu serverul
+        timerW.innerText = this.#formatTime(whiteTime);
+        timerB.innerText = this.#formatTime(blackTime);
+
         let remainingTime = turn === Game.WHITE ? whiteTime : blackTime;
         this.timerInterval = setInterval(() => {
             remainingTime--;

@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tabla de Table</title>
+    <title>Table Online</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link href="https://fonts.cdnfonts.com/css/seven-segment" rel="stylesheet">
     <link rel="stylesheet" href="/css/board.css">
 </head>
 
@@ -23,8 +24,8 @@
             </div>
 
             <div class="bar">
-                    <span class="box b">
-                    </span>
+                    <span class="box b"></span>
+                    <span class="timer b"></span>
             </div>
 
             <div class="side">
@@ -146,6 +147,7 @@
 
             <div class="bar bottom">
                 <span class="box w"></span>
+                <span class="timer w"></span>
             </div>
 
             <div class="side">
@@ -159,14 +161,53 @@
         </div>
     </div>
 
-    <script src="/js/ws.js"></script>
-    <script src="/js/game.js"></script>
-    <script src="/js/board.js"></script>
+    <div id="endGameOverlay" class="overlay hidden">
+        <div id="endGameBox" class="popup scale-75 opacity-0">
+
+            <h2 id="endGameTitle" class="title"></h2>
+
+            <table class="score-table">
+                <tr class="avatars">
+                    <td id="p1name" class="player-name"></td>
+
+                    <td class="avatar">
+                        <div class="player-icon"></div>
+                    </td>
+
+                    <td class="avatar">
+                        <div class="player-icon"></div>
+                    </td>
+
+                    <td id="p2name" class="player-name"></td>
+                </tr>
+
+                <tr class="round-score">
+                    <td id="p1round" class="score"></td>
+                    <td></td>
+                    <td></td>
+                    <td id="p2round" class="score"></td>
+                </tr>
+
+                <tr class="total-score">
+                    <td id="p1total" class="score-total"></td>
+                    <td></td>
+                    <td></td>
+                    <td id="p2total" class="score-total"></td>
+                </tr>
+            </table>
+
+            <button id="endGameOk" class="ok-btn">➜</button>
+        </div>
+    </div>
 
     <script th:inline="javascript">
         const playerId = /*[[${playerId}]]*/ 0;
         const roomId = /*[[${roomId}]]*/ "";
     </script>
+
+    <script src="/js/ws.js"></script>
+    <script src="/js/game.js"></script>
+    <script src="/js/board.js"></script>
 
     <script>
         const board = new Board();

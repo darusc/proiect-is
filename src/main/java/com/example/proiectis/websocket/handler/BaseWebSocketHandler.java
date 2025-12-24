@@ -1,12 +1,12 @@
 package com.example.proiectis.websocket.handler;
 
+import com.example.proiectis.websocket.BaseWebSocketListener;
+import com.example.proiectis.websocket.Broadcaster;
 import com.example.proiectis.websocket.Channel;
 import com.example.proiectis.websocket.Client;
-import com.example.proiectis.websocket.CustomWebSocketListener;
 import com.example.proiectis.websocket.exception.WsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -17,63 +17,30 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-@Component
-public class CustomWebSocketHandlerImpl extends TextWebSocketHandler implements CustomWebSocketHandler {
+public abstract class BaseWebSocketHandler extends TextWebSocketHandler implements Broadcaster {
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    public static final String ACTION_JOIN = "join";
 
-    private final Set<Client> activeClients = new HashSet<>();
-    private final Set<Channel> activeChannels = new HashSet<>();
+    protected final ObjectMapper mapper = new ObjectMapper();
 
-    private final Set<CustomWebSocketListener> listeners = new HashSet<>();
+    protected final Set<Channel> activeChannels = new HashSet<>();
+    protected final Set<Client> activeClients = new HashSet<>();
 
-    @Override
-    public void addListener(CustomWebSocketListener listener) {
-        listeners.add(listener);
+    private final BaseWebSocketListener baseWebSocketListener;
+    private final Integer maxRoomSize;
+
+    public BaseWebSocketHandler(BaseWebSocketListener baseWebSocketListener) {
+        this(baseWebSocketListener, null);
     }
 
-    @Override
-    public void removeListener(CustomWebSocketListener listener) {
-        listeners.remove(listener);
-    }
-
-    @Override
-    public void broadcast(Channel channel, Object json) throws Exception {
-        if (channel == null) {
-            return;
-        }
-
-        try {
-            String payload = mapper.writeValueAsString(json);
-            for (Client client : channel.getClients()) {
-                client.getSession().sendMessage(new TextMessage(payload));
-            }
-        } catch (Exception e) {
-            throw new WsException("INTERNAL_ERROR", e.getMessage());
-        }
-    }
-
-    @Override
-    public void broadcast(Channel channel, Client client, String json) throws Exception {
-        if (channel == null) {
-            return;
-        }
-
-        try {
-            String payload = mapper.writeValueAsString(json);
-            for (Client c : channel.getClients()) {
-                if (c != client) {
-                    c.getSession().sendMessage(new TextMessage(payload));
-                }
-            }
-        } catch (Exception e) {
-            throw new WsException("INTERNAL_ERROR", e.getMessage());
-        }
+    public BaseWebSocketHandler(BaseWebSocketListener baseWebSocketListener, Integer maxRoomSize) {
+        this.baseWebSocketListener = baseWebSocketListener;
+        this.maxRoomSize = maxRoomSize;
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        int playerId = getClientIdFromSession(session);
+        Long playerId = getClientIdFromSession(session);
         System.out.println("Player " + playerId + " connected. Session id: " + session.getId());
     }
 
@@ -102,7 +69,7 @@ public class CustomWebSocketHandlerImpl extends TextWebSocketHandler implements 
                 throw new WsException("NOT_IN_ROOM", "Join a room first");
             }
 
-            listeners.forEach(l -> l.onMessage(client, node));
+            baseWebSocketListener.onMessage(client, node);
         }
     }
 
@@ -112,6 +79,8 @@ public class CustomWebSocketHandlerImpl extends TextWebSocketHandler implements 
         if (client == null) {
             return;
         }
+
+        baseWebSocketListener.onClientLeave(client);
 
         // Elimina sesiunea din canalul in care a fost adaugata
         Channel channel = client.getChannel();
@@ -123,8 +92,36 @@ public class CustomWebSocketHandlerImpl extends TextWebSocketHandler implements 
             System.out.println("[Room " + client.getChannel().getId() + "]: Room removed");
             activeChannels.remove(channel);
         }
+    }
 
-        listeners.forEach(l -> l.onClientLeave(client));
+    @Override
+    public void broadcast(Channel channel, Object json) {
+        if (channel == null) {
+            return;
+        }
+
+        try {
+            String payload = mapper.writeValueAsString(json);
+            for (Client client : channel.getClients()) {
+                client.getSession().sendMessage(new TextMessage(payload));
+            }
+        } catch (Exception e) {
+            System.err.println("[Room " + channel.getId() + "]: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void broadcast(Client client, Object json) {
+        if (client == null) {
+            return;
+        }
+
+        try {
+            String payload = mapper.writeValueAsString(json);
+            client.getSession().sendMessage(new TextMessage(payload));
+        } catch (Exception e) {
+            System.err.println("[Room " + client.getChannel().getId() + "]: " + e.getMessage());
+        }
     }
 
     private void join(WebSocketSession session, String roomId) throws Exception {
@@ -136,9 +133,9 @@ public class CustomWebSocketHandlerImpl extends TextWebSocketHandler implements 
             activeChannels.add(channel);
         }
 
-        int clientId = getClientIdFromSession(session);
+        Long clientId = getClientIdFromSession(session);
 
-        if (channel.isFull()) {
+        if (maxRoomSize != null && channel.isFull(maxRoomSize)) {
             System.out.println("[Room " + roomId + "]: Already full");
             throw new WsException("ROOM_FULL", "Room " + roomId + " is full");
         }
@@ -147,7 +144,7 @@ public class CustomWebSocketHandlerImpl extends TextWebSocketHandler implements 
         channel.addClient(client);
         activeClients.add(client);
 
-        listeners.forEach(l -> l.onClientJoin(client));
+        baseWebSocketListener.onClientJoin(client);
 
         System.out.println("[Room " + roomId + "]: Player " + clientId + " joined");
     }
@@ -156,14 +153,14 @@ public class CustomWebSocketHandlerImpl extends TextWebSocketHandler implements 
      * Returneaza clientId din lista de query params.
      * Daca nu exista arunca WsException
      */
-    private int getClientIdFromSession(WebSocketSession session) throws WsException {
+    private Long getClientIdFromSession(WebSocketSession session) throws WsException {
         URI uri = session.getUri();
         if (uri.getQuery() == null) {
             throw new WsException("MISSING_PLAYER_ID", "Player id is required");
         }
 
         String query = uri.getQuery();
-        return Integer.parseInt(Arrays
+        return Long.parseLong(Arrays
                 .stream(query.split("&"))
                 .map(k -> k.split("="))
                 .filter(k -> k.length == 2 && k[0].equals("clientId"))

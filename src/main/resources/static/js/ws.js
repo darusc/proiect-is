@@ -5,10 +5,11 @@ class Ws {
     /**
      * @param {...number} clientId
      * @param {...string} roomId
+     * @param {...string} endpoint
      * @param {...(MessageEvent) => {}} onmessage
      */
-    constructor(clientId, roomId, onmessage) {
-        this.#socket = new WebSocket(`ws://localhost:8080/ws/game?clientId=${clientId}`);
+    constructor(clientId, roomId, endpoint, onmessage) {
+        this.#socket = new WebSocket(`${endpoint}?clientId=${clientId}`);
         this.#socket.onopen = () => this.join(roomId);
         this.#socket.onmessage = onmessage;
     }

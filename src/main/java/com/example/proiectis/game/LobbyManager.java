@@ -1,6 +1,5 @@
 package com.example.proiectis.game;
 
-import com.example.proiectis.game.exception.GameException;
 import com.example.proiectis.game.model.Room;
 import com.example.proiectis.websocket.BaseWebSocketListener;
 import com.example.proiectis.websocket.Broadcaster;
@@ -24,11 +23,7 @@ public class LobbyManager implements BaseWebSocketListener {
 
     @Override
     public void onClientJoin(Client client) {
-        try {
-            broadcaster.broadcast(client, new LobbyResponse.Rooms(getAvailableRooms()));
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+        broadcaster.broadcast(client, new LobbyResponse.Rooms(getAvailableRooms()));
     }
 
     @Override
@@ -40,42 +35,31 @@ public class LobbyManager implements BaseWebSocketListener {
     public void onMessage(Client client, JsonNode message) {
         System.out.println(message);
 
-        try {
-            if (!message.has("type") || !message.has("payload")) {
-                broadcaster.broadcast(client, Response.InvalidRequest("Missing type and/or payload"));
-                return;
-            }
+        if (!message.has("type") || !message.has("payload")) {
+            broadcaster.broadcast(client, Response.InvalidRequest("Missing type and/or payload"));
+            return;
+        }
 
-            String type = message.get("type").asText();
-            JsonNode payload = message.get("payload");
+        String type = message.get("type").asText();
+        JsonNode payload = message.get("payload");
 
-            switch (type) {
-                case REQUEST_CREATE_ROOM:
-                    String password = payload.get("password").isNull() ? null : payload.get("password").asText();
-                    Room room = createRoom(client.getId(), client.getId().toString(), password);
+        switch (type) {
+            case REQUEST_CREATE_ROOM:
+                String password = payload.get("password").isNull() ? null : payload.get("password").asText();
+                Room room = createRoom(client.getId(), client.getId().toString(), password);
 
-                    broadcaster.broadcast(client, new LobbyResponse.RoomCreated(room.getId()));
-                    broadcaster.broadcast(client.getChannel(), new LobbyResponse.Rooms(getAvailableRooms()));
-                    break;
+                broadcaster.broadcast(client, new LobbyResponse.RoomCreated(room.getId()));
+                broadcaster.broadcast(client.getChannel(), new LobbyResponse.Rooms(getAvailableRooms()));
+                break;
 
-                case REQUEST_JOIN_ROOM:
-                    String roomId = payload.get("roomId").asText();
-                    String password_ = payload.get("password").isNull() ? null : payload.get("password").asText();
-                    boolean joined = joinRoom(client.getId(), roomId, password_);
+            case REQUEST_JOIN_ROOM:
+                String roomId = payload.get("roomId").asText();
+                String password_ = payload.get("password").isNull() ? null : payload.get("password").asText();
+                boolean joined = joinRoom(client.getId(), roomId, password_);
 
-                    broadcaster.broadcast(client, joined ? new LobbyResponse.JoinSuccess(roomId) : new LobbyResponse.JoinFailed());
-                    broadcaster.broadcast(client.getChannel(), new LobbyResponse.Rooms(getAvailableRooms()));
-                    break;
-            }
-        } catch (GameException e) {
-            // Trateaza exceptiile de joc. Transmite eroarea clientului care a initiat mesajul
-            try {
-                broadcaster.broadcast(client, e.serialize());
-            } catch (Exception ex) {
-                System.err.println(ex.getMessage());
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
+                broadcaster.broadcast(client, joined ? new LobbyResponse.JoinSuccess(roomId) : new LobbyResponse.JoinFailed());
+                broadcaster.broadcast(client.getChannel(), new LobbyResponse.Rooms(getAvailableRooms()));
+                break;
         }
     }
 
@@ -120,6 +104,7 @@ public class LobbyManager implements BaseWebSocketListener {
 
         public static class Rooms extends Response<Rooms.RoomsPayload> {
             public record RoomsPayload(Object rooms) { }
+
             public Rooms(Object rooms) {
                 super("rooms", new RoomsPayload(rooms));
             }

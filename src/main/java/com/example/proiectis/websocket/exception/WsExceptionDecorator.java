@@ -24,7 +24,7 @@ public class WsExceptionDecorator extends WebSocketHandlerDecorator {
             super.handleMessage(session, message);
         } catch (WsException e) {
             session.sendMessage(new TextMessage(serializeException(e)));
-            session.close();
+            //session.close();
         } catch (Exception e) {
             session.sendMessage(new TextMessage(serializeException(new WsException("INTERNAL_ERROR", e.getMessage()))));
             session.close();

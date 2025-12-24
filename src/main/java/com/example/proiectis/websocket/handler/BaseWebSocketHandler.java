@@ -95,7 +95,7 @@ public abstract class BaseWebSocketHandler extends TextWebSocketHandler implemen
     }
 
     @Override
-    public void broadcast(Channel channel, Object json) throws Exception {
+    public void broadcast(Channel channel, Object json) {
         if (channel == null) {
             return;
         }
@@ -106,12 +106,12 @@ public abstract class BaseWebSocketHandler extends TextWebSocketHandler implemen
                 client.getSession().sendMessage(new TextMessage(payload));
             }
         } catch (Exception e) {
-            throw new WsException("INTERNAL_ERROR", e.getMessage());
+            System.err.println("[Room " + channel.getId() + "]: " + e.getMessage());
         }
     }
 
     @Override
-    public void broadcast(Client client, Object json) throws Exception {
+    public void broadcast(Client client, Object json) {
         if (client == null) {
             return;
         }
@@ -120,7 +120,7 @@ public abstract class BaseWebSocketHandler extends TextWebSocketHandler implemen
             String payload = mapper.writeValueAsString(json);
             client.getSession().sendMessage(new TextMessage(payload));
         } catch (Exception e) {
-            throw new WsException("INTERNAL_ERROR", e.getMessage());
+            System.err.println("[Room " + client.getChannel().getId() + "]: " + e.getMessage());
         }
     }
 

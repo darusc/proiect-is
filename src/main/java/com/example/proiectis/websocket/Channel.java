@@ -29,4 +29,6 @@ public class Channel {
     public boolean isFull(int roomSize) {
         return clients.size() >= roomSize;
     }
+    
+    public boolean isEmpty() { return clients.isEmpty(); }
 }

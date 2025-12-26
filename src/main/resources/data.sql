@@ -2,13 +2,13 @@
 -- 1. PLAYER DATA
 -- ============================================================================
 
-INSERT INTO player (id, username, email, password)
+INSERT INTO players (id, username, email, password)
 VALUES (1, 'ProGamer99', 'progamer@example.com', 'password123');
 
-INSERT INTO player (id, username, email, password)
+INSERT INTO players (id, username, email, password)
 VALUES (2, 'StrategyQueen', 'queen@example.com', 'securepass456');
 
-INSERT INTO player (id, username, email, password)
+INSERT INTO players (id, username, email, password)
 VALUES (3, 'NoobMaster69', 'noob@example.com', '123456');
 
 
@@ -17,21 +17,21 @@ VALUES (3, 'NoobMaster69', 'noob@example.com', '123456');
 -- ============================================================================
 
 -- Ranking for ProGamer99 (ID: 1)
-INSERT INTO ranking (player_id, wins, losses, win_rate, total_points)
+INSERT INTO rankings (player_id, wins, losses, win_rate, total_points)
 VALUES (1, 50, 10, 0.83, 1200);
 
 -- Ranking for StrategyQueen (ID: 2)
-INSERT INTO ranking (player_id, wins, losses, win_rate, total_points)
+INSERT INTO rankings (player_id, wins, losses, win_rate, total_points)
 VALUES (2, 100, 5, 0.95, 2500);
 
 -- Ranking for NoobMaster69 (ID: 3)
-INSERT INTO ranking (player_id, wins, losses, win_rate, total_points)
+INSERT INTO rankings (player_id, wins, losses, win_rate, total_points)
 VALUES (3, 2, 20, 0.09, 150);
 
 -- ============================================================================
 -- Reset auto-increment counter to 4
 -- ============================================================================
-ALTER TABLE player AUTO_INCREMENT = 4;
+ALTER TABLE players AUTO_INCREMENT = 4;
 
 -- ============================================================================
 -- 3. MATCH DATA

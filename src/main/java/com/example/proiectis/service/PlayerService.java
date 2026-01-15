@@ -21,8 +21,6 @@ public class PlayerService {
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(request.getPassword())
-                .level(1)
-                .score(0)
                 .build();
 
         playerRepo.save(player);
@@ -48,8 +46,6 @@ public class PlayerService {
                 .id(p.getId())
                 .username(p.getUsername())
                 .email(p.getEmail())
-                .level(p.getLevel())
-                .score(p.getScore())
                 .build();
     }
 }

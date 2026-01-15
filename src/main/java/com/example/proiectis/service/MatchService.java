@@ -33,7 +33,6 @@ public class MatchService {
                 .scorePlayer1(dto.getScorePlayer1())
                 .scorePlayer2(dto.getScorePlayer2())
                 .playedAt(LocalDateTime.now())
-                .history(dto.getHistory())
                 .build();
 
         matchRepo.save(match);
@@ -56,7 +55,6 @@ public class MatchService {
                 .scorePlayer1(m.getScorePlayer1())
                 .scorePlayer2(m.getScorePlayer2())
                 .playedAt(m.getPlayedAt().toString())
-                .history(m.getHistory())
                 .build();
     }
 }

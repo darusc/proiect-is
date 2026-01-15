@@ -16,5 +16,4 @@ public class MatchDTO {
     private int scorePlayer1;
     private int scorePlayer2;
     private String playedAt;
-    private String history;
 }

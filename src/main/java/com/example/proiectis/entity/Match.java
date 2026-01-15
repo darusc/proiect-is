@@ -34,7 +34,4 @@ public class Match {
     private int scorePlayer2;
 
     private LocalDateTime playedAt;
-
-    @Column(columnDefinition = "TEXT")
-    private String history; // JSON string
 }

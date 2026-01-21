@@ -54,7 +54,7 @@
 		\vspace{1.6cm}
 		
 		\begin{tabular}{ll}
-			\textbf{Echipă:} & Cîrneală Darius, Botărel Patrik \\
+			\textbf{Echipă:} & Cîrneală Darius, Botărel Patrik, Mărginean Alexandru \\
 			\textbf{An/Grupă:} & \textit{Anul 3, grupa 7} \\
 			\textbf{Disciplina:} & \textit{Inginerie Software} \\
 		\end{tabular}
@@ -104,11 +104,13 @@
 		\item \textbf{Matchmaking}: Posibilitatea de a vedea camerele disponibile și de a intra în joc.
 		\item \textbf{Mecanica de joc}: Aruncarea automată a zarurilor, evidențierea mutărilor posibile, logica de final de joc.
 		\item \textbf{Chat}: Comunicare prin mesaje text între jucători în timpul partidei.
+		\item \textbf{Dashboard Utilizator}: Vizualizarea statisticilor personale și a poziției în clasament direct în Lobby.
+		\item \textbf{Istoric Meciuri}: Afișarea listei cronologice a meciurilor jucate, incluzând oponentul, scorul și rezultatul (Victorie/Înfrângere).
 	\end{enumerate}
 	
 	\subsection{Diagrama Use-Case}
 	\begin{figure}[H]
-		\fakeimage{usecase\_table\_online.png}
+		\includegraphics[width=0.85\textwidth]{fig/usecase.png}
 		\caption{Diagrama Use-Case — Arena Table}
 		\label{fig:usecase}
 	\end{figure}
@@ -180,6 +182,35 @@
 		\caption{Diagramă de Secvență — Fluxul de Joc și Persistența Datelor}
 	\end{figure}
 	
+	
+	
+	
+	\subsection{Mărginean Alexandru — Sistemul de Autentificare și Managementul Sesiunilor}
+	
+	\textbf{Logica de Autentificare (Backend)}:
+	Am implementat \texttt{AuthController}, care gestionează fluxurile de securitate ale aplicației. Sistemul permite înregistrarea utilizatorilor noi prin \texttt{signup} și validarea identității acestora prin \texttt{login}. Parolele și datele de profil sunt gestionate prin \texttt{PlayerRepository}, asigurând o integrare directă cu baza de date MySQL.
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.85\textwidth]{fig/auth.png}
+		\caption{Diagramă de Secvență — Procesul de Înregistrare și Autentificare}
+	\end{figure}
+	
+	\textbf{Managementul Sesiunilor}:
+	Pentru a menține starea utilizatorului între pagini (Lobby, Game Board), am utilizat \texttt{HttpSession}. La o autentificare reușită, obiectul \texttt{Player} este stocat în sesiune, permițând celorlalte componente (precum WebSockets) să identifice în mod unic utilizatorul curent. Procesul de \texttt{logout} asigură invalidarea sesiunii și curățarea datelor sensibile.
+	
+	\textbf{Validarea Datelor și Feedback}:
+	Am implementat mecanisme de validare pentru a preveni duplicarea numelor de utilizator. În cazul unor erori (parolă incorectă sau utilizator existent), controller-ul transmite mesaje de feedback către interfața grafică prin intermediul modelului \texttt{Thymeleaf}, oferind o experiență de utilizare fluidă.
+	
+	\textbf{Securitatea la nivel de Controller}:
+	\begin{itemize}
+		\item \textbf{Signup}: Utilizează pattern-ul \texttt{Builder} pentru a crea entitatea \texttt{Player} înainte de salvare.
+		\item \textbf{Login}: Verifică existența utilizatorului și potrivirea credențialelor înainte de a redirecționa către pagina principală.
+		\item \textbf{Logout}: Dezalocă resursele sesiunii pentru a preveni accesul neautorizat.
+	\end{itemize}
+	
+	\textbf{Experiența Utilizatorului (UX)}:
+	Am implementat stiluri CSS condiționale pentru a diferenția vizual rezultatele partidelor (victorii vs. înfrângeri) și am utilizat \texttt{Thymeleaf} pentru a randa dinamic aceste date, oferind utilizatorului un feedback instantaneu asupra progresului său în joc.
 	% =========================
 	% 6. Design Patterns
 	% =========================
@@ -287,3 +318,4 @@
 	\end{figure}
 	
 \end{document}
+

@@ -1,126 +1,245 @@
 <!DOCTYPE html>
-<html lang="ro">
+<html xmlns:th="http://www.thymeleaf.org" lang="ro">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Table Online</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <title>Table Online - Lobby</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/lobby.css">
+    <style>
+        /* RESET ȘI FUNDAL */
+        body {
+            background-color: #000 !important;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        /* STRUCTURA DASHBOARD - 3 COLOANE */
+        .dashboard-wrapper {
+            display: grid !important;
+            grid-template-columns: 280px 1fr 280px !important;
+            gap: 15px;
+            padding: 15px;
+            height: 100vh;
+            width: 100vw;
+            box-sizing: border-box;
+        }
+
+        /* PANOURI LATERALE */
+        .side-panel {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            min-width: 0; /* Previne overflow-ul în grid */
+        }
+
+        .side-panel h3 {
+            font-size: 11px;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0 0 15px 0;
+            border-bottom: 1px solid #1a1a1a;
+            padding-bottom: 8px;
+        }
+
+        /* TABELE DATE */
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table td {
+            padding: 10px 5px;
+            border-bottom: 1px solid #111;
+            font-size: 13px;
+            color: #ccc;
+        }
+
+        .rank-pos { color: #555; width: 25px; font-weight: bold; }
+        .points { color: #4dabf7; text-align: right; }
+        .win-indicator { color: #28a745; font-weight: bold; text-align: right; }
+        .loss-indicator { color: #dc3545; font-weight: bold; text-align: right; }
+        .draw-indicator { color: #555; text-align: right; }
+        .no-data { color: #333; font-size: 12px; text-align: center; margin-top: 20px; }
+
+        /* COLOANA CENTRALĂ */
+        .lobby-center {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 0;
+        }
+
+        .user-status-bar {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            padding: 10px 20px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logout-btn {
+            color: #555;
+            text-decoration: none;
+            font-size: 12px;
+            border: 1px solid #1a1a1a;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .logout-btn:hover { color: #ff4d4d; border-color: #441111; }
+
+        /* Ajustări pentru Lobby-ul tău original */
+        .lobby { flex-grow: 1; margin: 0 !important; overflow-y: auto; }
+    </style>
 </head>
 
 <body>
 
-    <div class="lobby">
-        <div class="top-bar">
-            <button id="openCreateModal" class="create-btn"><i class="fa-solid fa-plus"></i> Create Room</button>
-        </div>
-        <div class="rooms" id="roomsList"></div>
-    </div>
+<div class="dashboard-wrapper">
 
-    <div id="createModal" class="overlay">
-        <div class="modal">
-            <h3>Create Room</h3>
-            <input id="roomPassword" type="text" placeholder="Password (optional)">
-            <div>
-                <button id="createRoomBtn" class="confirm"><i class="fa-solid fa-arrow-right"></i></button>
-                <button id="closeCreateModal" class="cancel"><i class="fa-solid fa-x"></i></button>
+    <aside class="side-panel">
+        <h3>Rankings</h3>
+        <table class="data-table">
+            <tr th:each="rank, iter : ${globalRankings}">
+                <td class="rank-pos" th:text="${iter.index + 1}">1</td>
+                <td th:text="${rank.player.username}">User</td>
+                <td class="points" th:text="${rank.totalPoints}">0</td>
+            </tr>
+        </table>
+    </aside>
+
+    <main class="lobby-center">
+        <div class="user-status-bar">
+                <span>
+                    <i class="fa-solid fa-circle" style="color: #28a745; font-size: 8px; vertical-align: middle; margin-right: 5px;"></i>
+                    <strong th:text="${username}">Player</strong>
+                </span>
+            <a th:href="@{/logout}" class="logout-btn">Logout</a>
+        </div>
+
+        <div class="lobby">
+            <div class="top-bar">
+                <button id="openCreateModal" class="create-btn"><i class="fa-solid fa-plus"></i> Create Room</button>
             </div>
+            <div class="rooms" id="roomsList"></div>
+        </div>
+    </main>
+
+    <aside class="side-panel">
+        <h3>History</h3>
+        <div th:if="${#lists.isEmpty(matchHistory)}" class="no-data">
+            No matches played yet.
+        </div>
+        <table class="data-table" th:if="${not #lists.isEmpty(matchHistory)}">
+            <tr th:each="match : ${matchHistory}">
+                <td>
+                    <span th:text="${match.player1.id == currentUserId ? match.player2.username : match.player1.username}">Opp</span>
+                </td>
+                <td style="color: #444; text-align: center; font-size: 11px;" th:text="${match.scorePlayer1 + '-' + match.scorePlayer2}">0-0</td>
+                <td class="res-col">
+                        <span th:if="${match.winner != null}">
+                            <span th:if="${match.winner.id == currentUserId}" class="win-indicator">W</span>
+                            <span th:if="${match.winner.id != currentUserId}" class="loss-indicator">L</span>
+                        </span>
+                    <span th:if="${match.winner == null}" class="draw-indicator">D</span>
+                </td>
+            </tr>
+        </table>
+    </aside>
+
+</div>
+
+<div id="createModal" class="overlay">
+    <div class="modal">
+        <h3>Create Room</h3>
+        <input id="roomPassword" type="text" placeholder="Password (optional)">
+        <div>
+            <button id="createRoomBtn" class="confirm"><i class="fa-solid fa-arrow-right"></i></button>
+            <button id="closeCreateModal" class="cancel"><i class="fa-solid fa-x"></i></button>
         </div>
     </div>
+</div>
 
-    <div id="passwordModal" class="overlay">
-        <div class="modal">
-            <h3>Enter Room Password</h3>
-            <input id="passwordInput" type="password" placeholder="Password">
-            <div>
-                <button id="confirmPassword" class="confirm"><i class="fa-solid fa-arrow-right"></i></button>
-                <button id="cancelPassword" class="cancel"><i class="fa-solid fa-x"></i></button>
-            </div>
+<div id="passwordModal" class="overlay">
+    <div class="modal">
+        <h3>Enter Room Password</h3>
+        <input id="passwordInput" type="password" placeholder="Password">
+        <div>
+            <button id="confirmPassword" class="confirm"><i class="fa-solid fa-arrow-right"></i></button>
+            <button id="cancelPassword" class="cancel"><i class="fa-solid fa-x"></i></button>
         </div>
     </div>
+</div>
 
-    <script th:inline="javascript">
-        const playerId = /*[[${playerId}]]*/ 0;
-    </script>
+<script th:inline="javascript">
+    const playerId = /*[[${playerId}]]*/ 0;
+</script>
+<script src="/js/ws.js"></script>
+<script src="/js/lobby.js"></script>
+<script>
+    const lobby = new Lobby(playerId, { rooms: renderRooms });
+    let pendingRoomId = null;
+    const passwordModal = document.getElementById("passwordModal");
+    const passwordInput = document.getElementById("passwordInput");
 
-    <script src="/js/ws.js"></script>
-    <script src="/js/lobby.js"></script>
+    document.getElementById("cancelPassword").onclick = () => {
+        passwordModal.style.display = "none";
+        pendingRoomId = null;
+        passwordInput.value = "";
+    };
 
-    <script>
-        const lobby = new Lobby(playerId, { rooms: renderRooms });
+    document.getElementById("confirmPassword").onclick = () => {
+        lobby.join(pendingRoomId, passwordInput.value.trim());
+        passwordModal.style.display = "none";
+        pendingRoomId = null;
+        passwordInput.value = "";
+    };
 
-        let pendingRoomId = null;
-        const passwordModal = document.getElementById("passwordModal");
-        const passwordInput = document.getElementById("passwordInput");
+    function renderRooms(rooms) {
+        const container = document.getElementById("roomsList");
+        container.innerHTML = "";
+        rooms.forEach(room => {
+            const btn = document.createElement("button");
+            btn.className = "room";
+            btn.innerHTML = `
+                    ${room.private ? `<i><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2,4Q1,4 1,5V8Q1,9 2,9H8Q9,9 9,8V5Q9,4 8,4V3A1,1 0 0 0 2,3V5H3V3A1,1 0 0 1 7,3V4Z"></path></svg></i>` : ""}
+                    <div class="name">${room.name}</div>
+                    <div class="users">
+                        <u class="user" data-active="${room.playerCount >= 1}"><svg width="6" height="6" viewBox="0 0 6 6"><path d="M3 0A1 1 0 003 3 1 1 0 003 0M0 6A1 1 0 016 6"></path></svg></u>
+                        <u class="user" data-active="${room.playerCount >= 2}"><svg width="6" height="6" viewBox="0 0 6 6"><path d="M3 0A1 1 0 003 3 1 1 0 003 0M0 6A1 1 0 016 6"></path></svg></u>
+                    </div>
+                `;
+            btn.onclick = () => {
+                if (room.private) {
+                    pendingRoomId = room.id;
+                    passwordModal.style.display = "flex";
+                    passwordInput.focus();
+                } else {
+                    lobby.join(room.id, null);
+                }
+            };
+            container.appendChild(btn);
+        });
+    }
 
-        document.getElementById("cancelPassword").onclick = () => {
-            passwordModal.style.display = "none";
-            pendingRoomId = null;
-            passwordInput.value = "";
-        };
-
-        document.getElementById("confirmPassword").onclick = () => {
-            lobby.join(pendingRoomId, passwordInput.value.trim());
-            passwordModal.style.display = "none";
-            pendingRoomId = null;
-            passwordInput.value = "";
-        };
-
-        function renderRooms(rooms) {
-            const container = document.getElementById("roomsList");
-            container.innerHTML = "";
-
-            rooms.forEach(room => {
-                const btn = document.createElement("button");
-                btn.className = "room";
-
-                btn.innerHTML = `
-                ${room.private ? `
-                    <i><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2,4Q1,4 1,5V8Q1,9 2,9H8Q9,9 9,8V5Q9,4 8,4V3A1,1 0 0 0 2,3V5H3V3A1,1 0 0 1 7,3V4Z"></path></svg></i>
-                ` : ""}
-                
-                <div class="name">${room.name}</div>
-
-                <div class="users">
-                    <u class="user" data-active="true">
-                        <svg width="6" height="6" focusable="false" aria-hidden="true" preserveAspectRatio="xMidYMid meet" class="igy igy-user" viewBox="0 0 6 6"><path d="M3 0A1 1 0 003 3 1 1 0 003 0M0 6A1 1 0 016 6"></path></svg>
-                    </u>
-                    <u class="user" data-active="false">
-                        <svg width="6" height="6" focusable="false" aria-hidden="true" preserveAspectRatio="xMidYMid meet" class="igy igy-user" viewBox="0 0 6 6"><path d="M3 0A1 1 0 003 3 1 1 0 003 0M0 6A1 1 0 016 6"></path></svg>
-                    </u>
-                </div>
-            `;
-
-                btn.onclick = () => {
-                    if (room.private) {
-                        pendingRoomId = room.id;
-                        passwordModal.style.display = "flex";
-                        passwordInput.focus();
-                    } else {
-                        lobby.join(room.id, null);
-                    }
-                };
-
-                container.appendChild(btn);
-            });
-        }
-
-        const createModal = document.getElementById("createModal");
-
-        document.getElementById("openCreateModal").onclick = () =>
-            createModal.style.display = "flex";
-
-        document.getElementById("closeCreateModal").onclick = () =>
-            createModal.style.display = "none";
-
-        document.getElementById("createRoomBtn").onclick = () => {
-            const password = document.getElementById("roomPassword").value.trim();
-            lobby.create(password.length > 0 ? password : null);
-            createModal.style.display = "none";
-        };
-    </script>
-
+    const createModal = document.getElementById("createModal");
+    document.getElementById("openCreateModal").onclick = () => createModal.style.display = "flex";
+    document.getElementById("closeCreateModal").onclick = () => createModal.style.display = "none";
+    document.getElementById("createRoomBtn").onclick = () => {
+        const password = document.getElementById("roomPassword").value.trim();
+        lobby.create(password.length > 0 ? password : null);
+        createModal.style.display = "none";
+    };
+</script>
 </body>
-
 </html>

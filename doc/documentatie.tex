@@ -1,0 +1,321 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[romanian]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+\usepackage{geometry}
+\geometry{margin=2.2cm}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\hypersetup{
+	colorlinks=true,
+	linkcolor=black,
+	urlcolor=blue,
+	citecolor=black
+}
+
+\usepackage{titlesec}
+\titleformat{\section}{\Large\bfseries}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.7em}{}
+
+\setlist[itemize]{topsep=6pt, itemsep=3pt, leftmargin=18pt}
+\setlist[enumerate]{topsep=6pt, itemsep=3pt, leftmargin=18pt}
+
+% Comanda pentru placeholder
+\newcommand{\fakeimage}[1]{
+	\begin{center}
+		\fbox{\begin{minipage}{0.8\textwidth}
+				\centering
+				\vspace{2cm}
+				[PLACEHOLDER FIGURĂ: #1]
+				\vspace{2cm}
+		\end{minipage}}
+	\end{center}
+}
+
+\begin{document}
+	
+	% =========================
+	% TITLU
+	% =========================
+	\begin{titlepage}
+		\centering
+		\vspace*{2cm}
+		{\Huge \textbf{Joc Table Online}\par}
+		\vspace{0.6cm}
+		{\Large Documentație proiect Inginerie Software\par}
+		\vspace{1.6cm}
+		
+		\begin{tabular}{ll}
+			\textbf{Echipă:} & Cîrneală Darius, Botărel Patrik, Mărginean Alexandru \\
+			\textbf{An/Grupă:} & \textit{Anul 3, grupa 7} \\
+			\textbf{Disciplina:} & \textit{Inginerie Software} \\
+		\end{tabular}
+		
+		\vfill
+	\end{titlepage}
+	
+	\tableofcontents
+	\newpage
+	
+	% =========================
+	% 1. Scurta descriere
+	% =========================
+	\section{Scurtă descriere a proiectului}
+	
+	Proiectul vizează dezvoltarea unei platforme web interactive pentru jocul de table. Utilizatorii pot crea conturi, se pot alătura unor camere de joc și pot juca împotriva altor utilizatori în timp real. Logica jocului este validată pe server, iar comunicarea se bazează pe protocolul WebSocket pentru a asigura o experiență de joc dinamică.
+	
+	\subsection{Obiective}
+	\begin{itemize}
+		\item Implementarea unui sistem de autentificare securizat.
+		\item Gestiunea meciurilor în timp real (aruncarea zarurilor, mutarea pieselor, capturarea pieselor).
+		\item Persistența datelor referitoare la utilizatori și istoricul meciurilor.
+		\item Interfață grafică responsivă adaptată pentru jocul de table.
+	\end{itemize}
+	
+	% =========================
+	% 2. Tehnologii
+	% =========================
+	\section{Limbaje și tehnologii folosite}
+	
+	\begin{itemize}
+		\item \textbf{Backend}: Java Spring Boot (Spring MVC, Spring Data JPA, Spring Security).
+		\item \textbf{Frontend}: Thymeleaf, HTML5, CSS3, JavaScript.
+		\item \textbf{Real-time}: WebSockets (Infrastructură custom bazată pe \texttt{TextWebSocketHandler}).
+		\item \textbf{Bază de date}: SQL (MySQL/PostgreSQL).
+		\item \textbf{Gestiune Proiect}: Maven, Git.
+	\end{itemize}
+	
+	% =========================
+	% 3. Cerinte functionale + Use-case
+	% =========================
+	\section{Cerințe funcționale + diagrama Use-Case}
+	
+	\subsection{Cerințe funcționale}
+	\begin{enumerate}
+		\item \textbf{Autentificare și Profil}: Utilizatorii se pot înregistra și loga.
+		\item \textbf{Matchmaking}: Posibilitatea de a vedea camerele disponibile și de a intra în joc.
+		\item \textbf{Mecanica de joc}: Aruncarea automată a zarurilor, evidențierea mutărilor posibile, logica de final de joc.
+		\item \textbf{Chat}: Comunicare prin mesaje text între jucători în timpul partidei.
+		\item \textbf{Dashboard Utilizator}: Vizualizarea statisticilor personale și a poziției în clasament direct în Lobby.
+		\item \textbf{Istoric Meciuri}: Afișarea listei cronologice a meciurilor jucate, incluzând oponentul, scorul și rezultatul (Victorie/Înfrângere).
+	\end{enumerate}
+	
+	\subsection{Diagrama Use-Case}
+	\begin{figure}[H]
+		\includegraphics[width=0.85\textwidth]{fig/usecase.png}
+		\caption{Diagrama Use-Case — Arena Table}
+		\label{fig:usecase}
+	\end{figure}
+	
+	% =========================
+	% 4. Cerinte non-functionale
+	% =========================
+	\section{Cerințe non-funcționale}
+	\begin{itemize}
+		\item \textbf{Performanță}: Actualizarea tablei de joc trebuie să aibă o latență de sub 200ms.
+		\item \textbf{Securitate}: Prevenirea mutărilor ilegale prin validarea acestora exclusiv pe backend.
+		\item \textbf{Usability}: Interfața trebuie să permită drag-and-drop pentru mutarea pieselor.
+	\end{itemize}
+	
+	% =========================
+	% 5. Diagrame per membru
+	% =========================
+	\section{Diagrame}
+	
+	\subsection{Cîrneală Darius — Infrastructură WebSocket și Logica Jocului}
+	
+	\textbf{Arhitectura WebSocket}:
+	Sistemul de comunicare utilizează o ierarhie de clase care decuplează managementul conexiunilor de logica aplicației. \texttt{BaseWebSocketHandler} gestionează obiectele de tip \texttt{Channel} și \texttt{Client}, delegând procesarea mesajelor JSON către interfața \texttt{BaseWebSocketListener}.
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.85\textwidth]{fig/ws.png}
+		\caption{Diagramă de Clase — Infrastructura WebSocket}
+	\end{figure}
+	
+	\textbf{Procesul de Comunicare}:
+	Diagrama de secvență tehnică ilustrează cum mesajele de tip "move" sau "join" sunt extrase din sesiunea WebSocket, validate de handler și trimise către managerul de joc pentru procesare.
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.9\textwidth]{fig/game_seq.png}
+		\caption{Diagramă de Secvență — Fluxul de mesaje WebSocket și Lobby}
+	\end{figure}
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.6\textwidth]{fig/game.png}
+		\caption{Diagramă de Activitate — Logica procesării unui turn de joc}
+	\end{figure}
+	
+	\subsection{Botărel Patrik — Persistență SQL și Servicii Backend}
+	
+	\textbf{Modelul de Date}:
+	Pentru persistența datelor s-a utilizat un sistem de tabele SQL care urmărește profilurile utilizatorilor, detaliile fiecărei partide (scoruri, câștigători) și un clasament calculat în timp real.
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.7\textwidth]{fig/database.png}
+		\caption{Diagramă Entity-Relationship (ERD)}
+	\end{figure}
+	
+	\textbf{Logica Serviciilor}:
+	Diagrama de clase pentru servicii ilustrează modul în care \texttt{MatchService} și \texttt{RankingService} utilizează pattern-ul Repository pentru a interacționa cu baza de date după finalizarea fiecărui eveniment de joc.
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.85\textwidth]{fig/service.png}
+		\caption{Diagramă de Clase pentru Servicii și Repositories}
+	\end{figure}
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.9\textwidth]{fig/diagram_seq.png}
+		\caption{Diagramă de Secvență — Fluxul de Joc și Persistența Datelor}
+	\end{figure}
+	
+	
+	
+	
+	\subsection{Mărginean Alexandru — Sistemul de Autentificare și Managementul Sesiunilor}
+	
+	\textbf{Logica de Autentificare (Backend)}:
+	Am implementat \texttt{AuthController}, care gestionează fluxurile de securitate ale aplicației. Sistemul permite înregistrarea utilizatorilor noi prin \texttt{signup} și validarea identității acestora prin \texttt{login}. Parolele și datele de profil sunt gestionate prin \texttt{PlayerRepository}, asigurând o integrare directă cu baza de date MySQL.
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.85\textwidth]{fig/auth.png}
+		\caption{Diagramă de Secvență — Procesul de Înregistrare și Autentificare}
+	\end{figure}
+	
+	\textbf{Managementul Sesiunilor}:
+	Pentru a menține starea utilizatorului între pagini (Lobby, Game Board), am utilizat \texttt{HttpSession}. La o autentificare reușită, obiectul \texttt{Player} este stocat în sesiune, permițând celorlalte componente (precum WebSockets) să identifice în mod unic utilizatorul curent. Procesul de \texttt{logout} asigură invalidarea sesiunii și curățarea datelor sensibile.
+	
+	\textbf{Validarea Datelor și Feedback}:
+	Am implementat mecanisme de validare pentru a preveni duplicarea numelor de utilizator. În cazul unor erori (parolă incorectă sau utilizator existent), controller-ul transmite mesaje de feedback către interfața grafică prin intermediul modelului \texttt{Thymeleaf}, oferind o experiență de utilizare fluidă.
+	
+	\textbf{Securitatea la nivel de Controller}:
+	\begin{itemize}
+		\item \textbf{Signup}: Utilizează pattern-ul \texttt{Builder} pentru a crea entitatea \texttt{Player} înainte de salvare.
+		\item \textbf{Login}: Verifică existența utilizatorului și potrivirea credențialelor înainte de a redirecționa către pagina principală.
+		\item \textbf{Logout}: Dezalocă resursele sesiunii pentru a preveni accesul neautorizat.
+	\end{itemize}
+	
+	\textbf{Experiența Utilizatorului (UX)}:
+	Am implementat stiluri CSS condiționale pentru a diferenția vizual rezultatele partidelor (victorii vs. înfrângeri) și am utilizat \texttt{Thymeleaf} pentru a randa dinamic aceste date, oferind utilizatorului un feedback instantaneu asupra progresului său în joc.
+	% =========================
+	% 6. Design Patterns
+	% =========================
+	\section{Design Patterns}
+	
+	\subsection{Observer / Listener Pattern}
+	Implementat prin interfața \texttt{BaseWebSocketListener}. Componenta \texttt{BaseWebSocketHandler} acționează ca subiectul care notifică managerii de joc sau de lobby la primirea mesajelor de la clienți, decuplând infrastructura de rețea de logica de business.
+	
+	\subsection{Strategy Pattern}
+	Folosit pentru gestionarea diverselor tipuri de acțiuni primite prin socket (\texttt{ROLL}, \texttt{MOVE}, \texttt{REMOVE}). Sistemul alege și execută logica specifică în funcție de tipul mesajului JSON, fără a folosi structuri \texttt{if-else} repetitive și greu de întreținut.
+	
+	\subsection{Spring Singleton Scope}
+	Deși nu este un Singleton clasic, am utilizat mecanismul de \textbf{Dependency Injection} din Spring Boot. Clasele adnotate cu \texttt{@Service} (ex: \texttt{GameManager}, \texttt{LobbyManager}) sunt gestionate ca instanțe unice (Singleton Bean Scope). Acest lucru asigură că starea camerelor de joc și a jucătorilor conectați este partajată corect între toate cererile WebSocket.
+	
+	\subsection{Builder Pattern}
+	Implementat prin adnotarea \texttt{@Builder} din librăria Lombok pe entitățile de bază de date (\texttt{Match}, \texttt{Player}). Acest pattern facilitează crearea obiectelor complexe într-o manieră lizibilă, esențială pentru procesul de salvare a rezultatelor meciurilor în \texttt{MatchService}.
+	
+	% =========================
+	% 7. Scurt README
+	% =========================
+	\section{Scurt README}
+	
+	\subsection{Structură proiect (Pachete)}
+	Organizarea codului respectă structura standard Spring Boot:
+	\begin{itemize}
+		\item \texttt{com.example.proiectis.controller} — Endpoint-uri REST pentru interfața web.
+		\item \texttt{com.example.proiectis.dto} — Obiecte pentru transferul de date între straturi.
+		\item \texttt{com.example.proiectis.entity} — Modelele de date pentru JPA (Match, Player, Ranking).
+		\item \texttt{com.example.proiectis.game} — Engine-ul jocului și managerii de sesiune (\texttt{GameManager}, \texttt{LobbyManager}).
+		\item \texttt{com.example.proiectis.repository} — Interfețe pentru accesul la baza de date.
+		\item \texttt{com.example.proiectis.service} — Logica de business (MatchService, PlayerService, RankingService).
+		\item \texttt{com.example.proiectis.websocket} — Managementul conexiunilor în timp real.
+	\end{itemize}
+	
+	\subsection{Rulare}
+	\begin{enumerate}
+		\item Configurați baza de date în \texttt{application.properties}.
+		\item Rulați \texttt{mvn spring-boot:run}.
+		\item Accesați aplicația în browser pe portul 8080.
+	\end{enumerate}
+	
+	% =========================
+	% 8. Specificația Protocolului WebSocket
+	% =========================
+	\section{Specificația Protocolului WebSocket}
+	
+	Comunicarea între client și server se realizează prin mesaje asincrone în format JSON. Toate mesajele urmează o structură standard definită de clasa \texttt{Response<T>}, asigurând un protocol predictibil pentru ambele părți.
+	
+	\subsection{Structura Generală a Mesajelor}
+	
+	Orice pachet de date (atât cerere, cât și răspuns) este compus din două câmpuri principale:
+	\begin{itemize}
+		\item \textbf{type}: Un șir de caractere care identifică tipul acțiunii sau al evenimentului.
+		\item \textbf{payload}: Un obiect generic care conține datele specifice evenimentului respectiv.
+	\end{itemize}
+	
+	\subsection{Mesaje de la Client (Requests)}
+	Clienții trimit mesaje către server pentru a interacționa cu mediul de joc. Acțiunile sunt procesate de \texttt{BaseWebSocketHandler}.
+	
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{@{}ll p{7cm}@{}}
+			\toprule
+			\textbf{Acțiune (Type)} & \textbf{Sursă} & \textbf{Descriere Payload} \\ \midrule
+			\texttt{create\_room} & Lobby & Conține opțional parola camerei (\texttt{password}). \\
+			\texttt{join\_room} & Lobby & Conține \texttt{roomId} și parola pentru acces. \\
+			\texttt{roll\_request} & Game & Nu necesită payload; solicită generarea zarurilor. \\
+			\texttt{move} & Game & Conține \texttt{from}, \texttt{to} și \texttt{color} (ID-ul piesei). \\
+			\texttt{reenter} & Game & Folosit pentru reintroducerea pieselor lovite pe tablă. \\
+			\bottomrule
+		\end{tabular}
+		\caption{Principalele cereri trimise de utilizator}
+	\end{table}
+	
+	\subsection{Mesaje de la Server (Responses)}
+	Serverul notifică clienții despre schimbările de stare prin transmisiuni de tip \textit{Unicast} sau \textit{Broadcast}.
+	
+	\begin{itemize}
+		\item \textbf{state}: Trimis după fiecare mutare validă. Conține întreaga structură a tablei de table serializată (poziția pieselor, zarurile rămase).
+		\item \textbf{timer}: Actualizare periodică (tick) a timpului rămas pentru fiecare jucător.
+		\item \textbf{game\_end}: Trimis la detectarea unui câștigător. Conține statisticile finale: \texttt{winner}, \texttt{points}, \texttt{username}.
+		\item \textbf{invalid\_move}: Trimis în caz de eroare. Conține un câmp \texttt{reason} (ex: "Not your turn" sau "Illegal move").
+	\end{itemize}
+	
+	\subsection{Exemplu de Mesaj JSON}
+	Mai jos este prezentat un exemplu de mesaj de tip \texttt{state}, generat de server pentru a sincroniza tabla de joc:
+	
+	\begin{verbatim}
+		{
+			"type": "state",
+			"payload": {
+				"board": [ [2, 0], [0, 0], ... ],
+				"dice": [4, 2],
+				"currentTurn": 1,
+				"whiteCaptured": 0,
+				"blackCaptured": 1
+			}
+		}
+	\end{verbatim}
+	
+	\begin{figure}[H]
+		\centering
+		
+		\caption{Vizualizarea ierarhică a protocolului de comunicare}
+	\end{figure}
+	
+\end{document}
+

@@ -1,19 +1,25 @@
 package com.example.proiectis.game;
 
+import com.example.proiectis.dto.MatchDTO;
+import com.example.proiectis.dto.PlayerDTO;
+import com.example.proiectis.dto.RankingDTO;
 import com.example.proiectis.game.exception.GameException;
 import com.example.proiectis.game.model.Board;
 import com.example.proiectis.game.model.Game;
 import com.example.proiectis.game.model.MoveRequest;
+import com.example.proiectis.service.MatchService;
+import com.example.proiectis.service.PlayerService;
+import com.example.proiectis.service.RankingService;
 import com.example.proiectis.websocket.BaseWebSocketListener;
 import com.example.proiectis.websocket.Broadcaster;
 import com.example.proiectis.websocket.Channel;
 import com.example.proiectis.websocket.Client;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Setter;
-import org.antlr.v4.runtime.misc.Triple;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class GameManager implements BaseWebSocketListener {
@@ -22,6 +28,11 @@ public class GameManager implements BaseWebSocketListener {
     private Broadcaster broadcaster;
 
     private final LobbyManager lobbyManager;
+    // Dependențe noi adăugate
+    private final MatchService matchService;
+    private final RankingService rankingService;
+    private final PlayerService playerService;
+
     private final Map<Channel, Game> activeGames = new HashMap<>();
 
     public final static String REQUEST_ROLL = "roll_request";
@@ -31,8 +42,17 @@ public class GameManager implements BaseWebSocketListener {
 
     public final static int MAX_ROOM_SIZE = 2;
 
-    public GameManager(LobbyManager lobbyManager, Timer timer) {
+    // Constructor actualizat pentru a include serviciile
+    public GameManager(LobbyManager lobbyManager,
+                       Timer timer,
+                       MatchService matchService,
+                       RankingService rankingService,
+                       PlayerService playerService) {
         this.lobbyManager = lobbyManager;
+        this.matchService = matchService;
+        this.rankingService = rankingService;
+        this.playerService = playerService;
+
         timer.subscribe(() -> {
             for (Game game : activeGames.values()) {
                 game.tick();
@@ -44,38 +64,65 @@ public class GameManager implements BaseWebSocketListener {
     public void onClientJoin(Client client) {
         broadcaster.broadcast(client.getChannel(), new GameResponse.PlayerJoined(client.getId()));
 
-        // Cand un client nou se conecteaza, creeaza o noua sesiune de joc
-        // asociata cu canalul corespunzator clientului daca aceasta nu exista
         activeGames.putIfAbsent(client.getChannel(), new Game(new Game.EventListener() {
             @Override
             public void onGameEnd(int winner, int points) {
-                /// TO DO salveaza meciul in baza de date si actualizeaza
-                /// clasamentul si scorul total dintre cei doi jucator
-                /// Returneaza informatii suplimentare (ex. username)
-                ///
-                /// playerIds[0] -> jucatorul alb, playerIds[1] -> jucatorul negru
-                /// int[] playerIds = getPlayerIdsFromChannel(client.getChannel());
+                // 1. Identificăm ID-urile jucătorilor
+                // playerIds[] -> jucatorul alb, playerIds[1] -> jucatorul negru
+                long[] playerIds = getPlayerIdsFromChannel(client.getChannel());
+                if (playerIds.length < 2) return; // Safety check
 
-                Map<String, Object> data = Map.of(
-                        "winner", winner,
-                        "white", Map.of(
-                                "points", winner == Board.Color.WHITE ? points : 0,
-                                "username", "...",                       ///  provizoriu
-                                "total", 0                                      ///  provizoriu
-                        ),
-                        "black", Map.of(
-                                "points", winner == Board.Color.BLACK ? points : 0,
-                                "username", "...",                       ///  provizoriu
-                                "total", 0                                      ///  provizoriu
-                        )
-                );
+                Long whiteId = playerIds[0];
+                Long blackId = playerIds[1];
+
+                Long winnerId = (winner == Board.Color.WHITE) ? whiteId : blackId;
+                Long loserId = (winner == Board.Color.WHITE) ? blackId : whiteId;
+
+                int scoreWhite = (winner == Board.Color.WHITE) ? points : 0;
+                int scoreBlack = (winner == Board.Color.BLACK) ? points : 0;
 
                 try {
+                    // 2. Salvăm meciul în DB
+                    matchService.recordMatch(MatchDTO.builder()
+                            .player1Id(whiteId)
+                            .player2Id(blackId)
+                            .winnerId(winnerId)
+                            .scorePlayer1(scoreWhite)
+                            .scorePlayer2(scoreBlack)
+                            .build());
+
+                    // 3. Actualizăm clasamentul (+3 puncte câștigător, update rate, etc)
+                    rankingService.updateRankingAfterMatch(winnerId, loserId);
+
+                    // 4. Obținem datele actualizate pentru a le trimite clienților
+                    PlayerDTO whitePlayer = playerService.getPlayer(whiteId);
+                    PlayerDTO blackPlayer = playerService.getPlayer(blackId);
+
+                    // Putem folosi getRanking deoarece updateRankingAfterMatch asigură crearea dacă nu există
+                    RankingDTO whiteRank = rankingService.getRanking(whiteId);
+                    RankingDTO blackRank = rankingService.getRanking(blackId);
+
+                    Map<String, Object> data = Map.of(
+                            "winner", winner,
+                            "white", Map.of(
+                                    "points", scoreWhite,
+                                    "username", whitePlayer.getUsername(),
+                                    "total", whiteRank.getTotalPoints()
+                            ),
+                            "black", Map.of(
+                                    "points", scoreBlack,
+                                    "username", blackPlayer.getUsername(),
+                                    "total", blackRank.getTotalPoints()
+                            )
+                    );
+
                     broadcaster.broadcast(client.getChannel(), new GameResponse.GameEnd(data));
                     activeGames.remove(client.getChannel());
                     lobbyManager.removeRoom(client.getChannel().getId());
+
                 } catch (Exception e) {
-                    System.out.println(e.getMessage());
+                    System.err.println("Error saving game results: " + e.getMessage());
+                    e.printStackTrace();
                 }
             }
 
@@ -89,13 +136,11 @@ public class GameManager implements BaseWebSocketListener {
             }
         }));
 
-        // Incepe jocul daca ambii jucatori sau conectat
         if (client.getChannel().isFull(MAX_ROOM_SIZE)) {
             Game game = activeGames.get(client.getChannel());
             long[] playerIds = getPlayerIdsFromChannel(client.getChannel());
-            // Primul player care a dat join va fi jucatorul alb
+
             broadcaster.broadcast(client.getChannel(), new GameResponse.GameStart(playerIds[0], playerIds[1]));
-            // Sincronizeaza timpul (in special la reconectare)
             broadcaster.broadcast(client.getChannel(), new GameResponse.Timer(game.getTimerData()));
             broadcaster.broadcast(client.getChannel(), new GameResponse.State(game.serialize()));
             game.start();
@@ -105,7 +150,6 @@ public class GameManager implements BaseWebSocketListener {
     @Override
     public void onClientLeave(Client client) {
         broadcaster.broadcast(client.getChannel(), new GameResponse.PlayerLeft(client.getId()));
-        // Opreste jocul (sterge) daca ambii jucatori s-au deconectat
         if(client.getChannel().isEmpty()) {
             activeGames.remove(client.getChannel());
             lobbyManager.removeRoom(client.getChannel().getId());
@@ -126,6 +170,8 @@ public class GameManager implements BaseWebSocketListener {
             JsonNode payload = message.get("payload");
 
             Game game = activeGames.get(client.getChannel());
+            if (game == null) return;
+
             MoveRequest moveRequest = null;
 
             switch (type) {
@@ -157,7 +203,6 @@ public class GameManager implements BaseWebSocketListener {
             broadcaster.broadcast(client.getChannel(), new GameResponse.State(game.serialize()));
 
         } catch (GameException e) {
-            // Trateaza exceptiile de joc. Transmite eroarea clientului care a initiat mesajul
             broadcaster.broadcast(client, e.serialize());
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -171,12 +216,10 @@ public class GameManager implements BaseWebSocketListener {
                 .toArray();
     }
 
-
+    // Clasele interne GameResponse rămân neschimbate
     private static class GameResponse {
-
         public static class PlayerJoined extends Response<PlayerJoined.PlayerPayload> {
             public record PlayerPayload(Long player) { }
-
             public PlayerJoined(Long playerId) {
                 super("player_joined", new PlayerPayload(playerId));
             }
@@ -184,7 +227,6 @@ public class GameManager implements BaseWebSocketListener {
 
         public static class PlayerLeft extends Response<PlayerLeft.PlayerPayload> {
             public record PlayerPayload(Long player) { }
-
             public PlayerLeft(Long playerId) {
                 super("player_left", new PlayerPayload(playerId));
             }
@@ -192,7 +234,6 @@ public class GameManager implements BaseWebSocketListener {
 
         public static class GameStart extends Response<GameStart.GameStartPayload> {
             public record GameStartPayload(Long white, Long black, int startTime) { }
-
             public GameStart(Long whitePlayer, Long blackPlayer) {
                 super("game_start", new GameStartPayload(whitePlayer, blackPlayer, Game.MAX_TIME));
             }
@@ -206,11 +247,9 @@ public class GameManager implements BaseWebSocketListener {
 
         public static class Timer extends Response<Timer.TimerPayload> {
             public record TimerPayload(int turn, long whiteTime, long blackTime) { }
-
             public Timer(int turn, long whiteTime, long blackTime) {
                 super("timer", new TimerPayload(turn, whiteTime, blackTime));
             }
-
             public Timer(Game.TimerData data) {
                 super("timer", new TimerPayload(data.a, data.b, data.c));
             }

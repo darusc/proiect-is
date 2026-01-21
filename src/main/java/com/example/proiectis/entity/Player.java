@@ -29,13 +29,5 @@ public class Player {
     @Setter
     @Column(nullable = false)
     private String password;
-
-    @Setter
-    @Column(nullable = false)
-    private int level;
-
-    @Setter
-    @Column(nullable = false)
-    private int score;
 }
 

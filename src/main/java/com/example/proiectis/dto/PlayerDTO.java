@@ -12,6 +12,4 @@ public class PlayerDTO {
     private Long id;
     private String username;
     private String email;
-    private int level;
-    private int score;
 }
